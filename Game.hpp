@@ -12,12 +12,11 @@
 #include <string>
 #include <c2d3/chien2d.h>
 #include <c2d3/chienaudio.h>
+#include "Game.hpp"
 
 #include "headers.h"
 #include "Jogador.hpp"
-
-#define     PI              3.14159265
-#define     MAX_FASES       64
+#include "Fase.h"
 
 
 class Game {
@@ -32,8 +31,6 @@ public:
     bool splashscreen();
     int mainmenuscreen();
     bool carregaListaFases(char *nome, int *numFases, char lista[MAX_FASES][MAX_TEXTO]);
-    bool carregaFase(char *nome, Fase *fase);
-    void imprimeFase(Fase *fase);
     bool gamescreen(Jogador &jogador, int numFase, char *arquivoFase);
     float calculaAngulo(const float dx, const float dy);
     bool loadhighscore();

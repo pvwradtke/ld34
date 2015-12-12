@@ -236,111 +236,6 @@ bool Game::carregaListaFases(char *nome, int *numFases, char lista[MAX_FASES][MA
     return true;
 }
 
-bool Game::carregaFase(char *nome, Fase *fase)
-{
-    FILE *arquivo = fopen(nome, "r");
-    bool title=false, triggers=false, mapa=false, geometria=false, marker=false;
-    char tipo[MAX_TEXTO];
-    while(!feof(arquivo) && (!title || !triggers || !mapa || !geometria || !marker))
-    {
-        // Lê o tipo do dado que vem agora
-        if(fscanf(arquivo, "%s", tipo) == 0){
-            fclose(arquivo);
-            return false;
-        }
-        // Processa o tipo do dado
-        if(strcmp(tipo, "stage_title")==0 && !title){
-            if(fscanf(arquivo, "%*[ \n\t]%[^\t\n]", fase->title)==0){
-                fclose(arquivo);
-                return(false);
-            }
-            title=true;
-        }
-        else if(strcmp(tipo, "trigged_messages")==0 && !triggers){
-            if(fscanf(arquivo, "%d", &fase->num_trigger)==0){
-                fclose(arquivo);
-                return(false);
-            }
-            for(int i=0;i<fase->num_trigger;i++){
-                if(fscanf(arquivo, "%*[ \n\t]%[^\t\n]", fase->trigger_messages[i])==0){
-                    fclose(arquivo);
-                    return false;
-                }
-                fase->trigger_activated[i]=false;
-            }
-            // Para garantir, inicializa os triggers não utilizados
-            for(int i=fase->num_trigger;i<MAX_TRIGGERS;i++)
-                fase->trigger_activated[i]=true;
-            triggers=true;
-        }
-        else if(strcmp(tipo, "map")==0){
-            if(fscanf(arquivo, "%d %d", &fase->largura, &fase->altura)<2){
-                fclose(arquivo);
-                return false;
-            }
-            for(int i=0;i<fase->altura;i++)
-                for(int j=0;j<fase->largura;j++)
-                    if(fscanf(arquivo, "%d", &fase->mapa[i][j])==0){
-                        fclose(arquivo);
-                        return false;
-                    }
-            mapa=true;
-        }
-        else if(strcmp(tipo, "marker")==0){
-            if(fscanf(arquivo, "%d", &fase->marca)==0){
-                fclose(arquivo);
-                return(false);
-            }
-            marker=true;
-        }
-        else if(strcmp(tipo, "geometry")==0){
-            int largura, altura;
-            if(fscanf(arquivo, "%d %d", &largura, &altura)<2){
-                fclose(arquivo);
-                return false;
-            }
-            for(int i=0;i<altura;i++)
-                for(int j=0;j<largura;j++)
-                    if(fscanf(arquivo, "%d", &fase->geometria[i][j])==0){
-                        fclose(arquivo);
-                        return false;
-                    }
-            geometria=true;
-        }
-    }
-    // Verifica que leu tudo
-    if(!title || !triggers || !mapa || !geometria || !marker)
-        return false;
-    // Processa a camada de geometria
-    for(int i=0;i<fase->altura;i++)
-        for(int j=0;j<fase->largura;j++)
-            if(fase->geometria[i][j]!=0)
-                fase->geometria[i][j]-=fase->marca-1;
-    return true;
-}
-
-void Game::imprimeFase(Fase *fase)
-{
-    printf("Titulo: %s\n", fase->title);
-    printf("Mapa:\n");
-    for(int i=0;i<fase->altura;i++)
-    {
-        for(int j=0;j<fase->largura;j++)
-            printf("%d\t", fase->mapa[i][j]);
-        printf("\n");
-    }
-    printf("Geometria:\n");
-    for(int i=0;i<fase->altura;i++)
-    {
-        for(int j=0;j<fase->largura;j++)
-            printf("%d\t", fase->geometria[i][j]);
-        printf("\n");
-    }
-    printf("Marca: %d\n", fase->marca);
-    for(int i=0;i<fase->num_trigger;i++)
-        printf("Trigger %d: %s\n", i+1, fase->trigger_messages[i]);
-}
-
 bool Game::gamescreen(Jogador &jogador, int numFase, char *arquivoFase)
 {
     // Load resources
@@ -357,16 +252,16 @@ bool Game::gamescreen(Jogador &jogador, int numFase, char *arquivoFase)
         "audio/05-youknowthosekillright.ogg",
         "audio/06-thinkfast.ogg"
     };
-    Fase    fase;
+    Fase    fase=Fase();
     int angulo=0;
     bool debug=false;
-    if(!carregaFase(arquivoFase, &fase))
+    if(fase.carrega(arquivoFase))
     {
         printf("Failed loading stage %s.\n", arquivoFase);
         return false;
     }
-    imprimeFase(&fase);
-    jogador.inicializa(&fase);
+    fase.imprime();
+    jogador.inicializa(fase);
 
 /*    if(!carregaFase(arquivoFase, mensagem, mapa, arquivoMusica))
     {
@@ -405,45 +300,10 @@ bool Game::gamescreen(Jogador &jogador, int numFase, char *arquivoFase)
             debug=!debug;
         // Desenha a tela
         C2D_LimpaTela();
-        int x_desl=(1920-fase.largura*32)/2;
-        int y_desl=(1080-fase.altura*32)/2;
-        if(angulo==0){
-            for(int i=0;i<fase.altura;i++)
-                for(int j=0;j<fase.largura;j++){
-                    C2D_DesenhaSpriteEspecial(tileset, fase.mapa[i][j]-1, x_desl+32*j, y_desl+32*i, C2D_FLIP_NENHUM, 1.0, 1.0, angulo);
-                    if(debug && fase.geometria[i][j])
-                        C2D_DesenhaSpriteEspecial(tileset, fase.geometria[i][j]+fase.marca-1, x_desl+32*j, y_desl+32*i, C2D_FLIP_NENHUM, 1.0, 1.0, angulo);
-                }
-        }else if(angulo==90){
-            x_desl=(1920-fase.altura*32)/2;
-            y_desl=(1080-fase.largura*32)/2;
-            for(int i=0;i<fase.altura;i++)
-                for(int j=0;j<fase.largura;j++){
-                    C2D_DesenhaSpriteEspecial(tileset, fase.mapa[fase.altura-1-j][i]-1, x_desl+32*j, y_desl+32*i, C2D_FLIP_NENHUM, 1.0, 1.0, angulo);
-                    if(debug && fase.geometria[fase.altura-1-j][i])
-                        C2D_DesenhaSpriteEspecial(tileset, fase.geometria[fase.altura-1-j][i]+fase.marca-1, x_desl+32*j, y_desl+32*i, C2D_FLIP_NENHUM, 1.0, 1.0, angulo);
-                }
-        }else if(angulo==180){
-            x_desl=(1920-fase.largura*32)/2;
-            y_desl=(1080-fase.altura*32)/2;
-            for(int i=0;i<fase.altura;i++)
-                for(int j=0;j<fase.largura;j++){
-                    C2D_DesenhaSpriteEspecial(tileset, fase.mapa[fase.largura-1-i][fase.altura-1-j]-1, x_desl+32*j, y_desl+32*i, C2D_FLIP_NENHUM, 1.0, 1.0, angulo);
-                    if(debug && fase.geometria[fase.largura-1-i][fase.altura-1-j])
-                        C2D_DesenhaSpriteEspecial(tileset, fase.geometria[fase.largura-1-i][fase.altura-1-j]+fase.marca-1, x_desl+32*j, y_desl+32*i, C2D_FLIP_NENHUM, 1.0, 1.0, angulo);
-                }
-        }else if(angulo==270){
-            x_desl=(1920-fase.altura*32)/2;
-            y_desl=(1080-fase.largura*32)/2;
-            for(int i=0;i<fase.altura;i++)
-                for(int j=0;j<fase.largura;j++){
-                    C2D_DesenhaSpriteEspecial(tileset, fase.mapa[j][fase.largura-1-i]-1, x_desl+32*j, y_desl+32*i, C2D_FLIP_NENHUM, 1.0, 1.0, angulo);
-                    if(debug && fase.geometria[j][fase.largura-1-i])
-                        C2D_DesenhaSpriteEspecial(tileset, fase.geometria[j][fase.largura-1-i]+fase.marca-1, x_desl+32*j, y_desl+32*i, C2D_FLIP_NENHUM, 1.0, 1.0, angulo);
-
-                }
-        }
-        jogador.desenha(angulo, &fase, x_desl, y_desl);
+        int x_desl=(1920-32*32)/2;
+        int y_desl=(1080-32*32)/2;
+        fase.desenha(angulo, x_desl, y_desl, debug);
+        jogador.desenha(angulo, x_desl, y_desl);
         C2D_Sincroniza(C2D_FPS_PADRAO);
         if(teclado[C2D_TESC].pressionou)
             fim=true;

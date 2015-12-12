@@ -31,7 +31,28 @@
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
+			<Add directory="../chien2d/include" />
 		</Compiler>
+		<Linker>
+			<Add library="SDL2" />
+			<Add library="SDL2_mixer" />
+			<Add library="SDL2_image" />
+			<Add library="SDL2_ttf" />
+		</Linker>
+		<Unit filename="../chien2d/include/c2d3/chien2d.h" />
+		<Unit filename="../chien2d/include/c2d3/chien2d2.h" />
+		<Unit filename="../chien2d/include/c2d3/chien2d2_interno.h" />
+		<Unit filename="../chien2d/include/c2d3/chienaudio.h" />
+		<Unit filename="../chien2d/include/c2d3/chienaudio2.h" />
+		<Unit filename="../chien2d/src/chien2d.cpp" />
+		<Unit filename="../chien2d/src/chienaudio.cpp" />
+		<Unit filename="Fase.cpp" />
+		<Unit filename="Fase.h" />
+		<Unit filename="Game.cpp" />
+		<Unit filename="Game.hpp" />
+		<Unit filename="Jogador.cpp" />
+		<Unit filename="Jogador.hpp" />
+		<Unit filename="headers.h" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<envvars />

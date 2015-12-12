@@ -27,28 +27,33 @@ Jogador::~Jogador()
     sprite=0;
 }
 
-bool Jogador::inicializa(const Fase *mapa)
+bool Jogador::inicializa(Fase &mapa)
 {
+    int xlocal, ylocal;
     // Procura a posicao do jogador
-    for(int i=0;i<mapa->altura;i++)
-        for(int j=0;j<mapa->largura;j++)
-            if(mapa->mapa[i][j]==JOGO_JOGADOR){
-                x=j*DIM_JOGADOR;
-                y=i*DIM_JOGADOR;
-            }
+    if(!mapa.procuraPrimeiraMarca(JOGO_JOGADOR, &xlocal, &ylocal))
+        return false;
+    x=xlocal;
+    y=ylocal;
     estado=JOGADOR_NORMAL;
     direcao = 0;
     vqueda=0;
     rotacao=0;
     dirRotacao = 2;
+    return true;
 }
 
-int Jogador::atualiza(const Fase *mapa)
+int Jogador::atualiza(Fase &mapa)
 {
-    rotacao+=dirRotacao;
+    rotacao+=dirRotacao/600.0;
+    // Calcula o deslocamento horizontal, baseado na direção do jogador
+    double dx, dy;
+    dx = (VJOGADOR*cos(PI*direcao))/600.0;
+    dy = (VJOGADOR*sin(PI*direcao))/600.0;
+    return 0;
 }
 
-void Jogador::desenha(const int angulo, const Fase *mapa, const int xref, const int yref)
+void Jogador::desenha(const int angulo, const int xref, const int yref)
 {
     switch(angulo)
     {
@@ -64,7 +69,7 @@ void Jogador::desenha(const int angulo, const Fase *mapa, const int xref, const 
     }
 }
 
-void Jogador::rotaciona(int angulo)
+void Jogador::rotaciona(const int angulo)
 {
-
+    direcao=angulo;
 }
