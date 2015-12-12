@@ -359,7 +359,7 @@ bool Game::gamescreen(Jogador &jogador, int numFase, char *arquivoFase)
     };
     Fase    fase;
     int angulo=0;
-    bool debug=true;
+    bool debug=false;
     if(!carregaFase(arquivoFase, &fase))
     {
         printf("Failed loading stage %s.\n", arquivoFase);
@@ -405,9 +405,9 @@ bool Game::gamescreen(Jogador &jogador, int numFase, char *arquivoFase)
             debug=!debug;
         // Desenha a tela
         C2D_LimpaTela();
+        int x_desl=(1920-fase.largura*32)/2;
+        int y_desl=(1080-fase.altura*32)/2;
         if(angulo==0){
-            int x_desl=(1920-fase.largura*32)/2;
-            int y_desl=(1080-fase.altura*32)/2;
             for(int i=0;i<fase.altura;i++)
                 for(int j=0;j<fase.largura;j++){
                     C2D_DesenhaSpriteEspecial(tileset, fase.mapa[i][j]-1, x_desl+32*j, y_desl+32*i, C2D_FLIP_NENHUM, 1.0, 1.0, angulo);
@@ -415,8 +415,8 @@ bool Game::gamescreen(Jogador &jogador, int numFase, char *arquivoFase)
                         C2D_DesenhaSpriteEspecial(tileset, fase.geometria[i][j]+fase.marca-1, x_desl+32*j, y_desl+32*i, C2D_FLIP_NENHUM, 1.0, 1.0, angulo);
                 }
         }else if(angulo==90){
-            int x_desl=(1920-fase.altura*32)/2;
-            int y_desl=(1080-fase.largura*32)/2;
+            x_desl=(1920-fase.altura*32)/2;
+            y_desl=(1080-fase.largura*32)/2;
             for(int i=0;i<fase.altura;i++)
                 for(int j=0;j<fase.largura;j++){
                     C2D_DesenhaSpriteEspecial(tileset, fase.mapa[fase.altura-1-j][i]-1, x_desl+32*j, y_desl+32*i, C2D_FLIP_NENHUM, 1.0, 1.0, angulo);
@@ -424,8 +424,8 @@ bool Game::gamescreen(Jogador &jogador, int numFase, char *arquivoFase)
                         C2D_DesenhaSpriteEspecial(tileset, fase.geometria[fase.altura-1-j][i]+fase.marca-1, x_desl+32*j, y_desl+32*i, C2D_FLIP_NENHUM, 1.0, 1.0, angulo);
                 }
         }else if(angulo==180){
-            int x_desl=(1920-fase.largura*32)/2;
-            int y_desl=(1080-fase.altura*32)/2;
+            x_desl=(1920-fase.largura*32)/2;
+            y_desl=(1080-fase.altura*32)/2;
             for(int i=0;i<fase.altura;i++)
                 for(int j=0;j<fase.largura;j++){
                     C2D_DesenhaSpriteEspecial(tileset, fase.mapa[fase.largura-1-i][fase.altura-1-j]-1, x_desl+32*j, y_desl+32*i, C2D_FLIP_NENHUM, 1.0, 1.0, angulo);
@@ -433,8 +433,8 @@ bool Game::gamescreen(Jogador &jogador, int numFase, char *arquivoFase)
                         C2D_DesenhaSpriteEspecial(tileset, fase.geometria[fase.largura-1-i][fase.altura-1-j]+fase.marca-1, x_desl+32*j, y_desl+32*i, C2D_FLIP_NENHUM, 1.0, 1.0, angulo);
                 }
         }else if(angulo==270){
-            int x_desl=(1920-fase.altura*32)/2;
-            int y_desl=(1080-fase.largura*32)/2;
+            x_desl=(1920-fase.altura*32)/2;
+            y_desl=(1080-fase.largura*32)/2;
             for(int i=0;i<fase.altura;i++)
                 for(int j=0;j<fase.largura;j++){
                     C2D_DesenhaSpriteEspecial(tileset, fase.mapa[j][fase.largura-1-i]-1, x_desl+32*j, y_desl+32*i, C2D_FLIP_NENHUM, 1.0, 1.0, angulo);
@@ -443,6 +443,7 @@ bool Game::gamescreen(Jogador &jogador, int numFase, char *arquivoFase)
 
                 }
         }
+        jogador.desenha(angulo, &fase, x_desl, y_desl);
         C2D_Sincroniza(C2D_FPS_PADRAO);
         if(teclado[C2D_TESC].pressionou)
             fim=true;

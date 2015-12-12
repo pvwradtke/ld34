@@ -20,7 +20,7 @@
 1429326915 /home/paulo/repositories/chien2d/include/c2d3/chienaudio.h
 	<SDL2/SDL_mixer.h>
 
-1449935857 source:/home/paulo/repositories/ld34/Game.cpp
+1449948464 source:/home/paulo/repositories/ld34/Game.cpp
 	"Game.hpp"
 	<sstream>
 	<iostream>
@@ -50,7 +50,7 @@
 1449935628 /home/paulo/repositories/ld34/Jogador.hpp
 	"headers.h"
 
-1449935964 source:/home/paulo/repositories/ld34/Jogador.cpp
+1449948381 source:/home/paulo/repositories/ld34/Jogador.cpp
 	"Jogador.hpp"
 	<cstdlib>
 	<c2d3/chien2d.h>

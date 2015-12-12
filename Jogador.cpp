@@ -64,7 +64,7 @@ void Jogador::desenha(const int angulo, const Fase *mapa, const int xref, const 
     }
 }
 
-void rotaciona(int angulo)
+void Jogador::rotaciona(int angulo)
 {
 
 }
