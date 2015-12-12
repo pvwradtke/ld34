@@ -53,18 +53,21 @@ int Jogador::atualiza(Fase &mapa)
     return 0;
 }
 
-void Jogador::desenha(const int angulo, const int xref, const int yref)
+void Jogador::desenha(const int xref, const int yref, const int angulo)
 {
     switch(angulo)
     {
     case 0:
-        C2D_DesenhaSprite(sprite, cor, xref+x, yref+y);
+        C2D_DesenhaSpriteEspecial(sprite, cor, xref+x, yref+y, C2D_FLIP_NENHUM, 1.0, 1.0, rotacao);
         break;
     case 90:
+        C2D_DesenhaSpriteEspecial(sprite, cor, xref+992-y, yref+x, C2D_FLIP_NENHUM, 1.0, 1.0, rotacao);
         break;
     case 180:
+        C2D_DesenhaSpriteEspecial(sprite, cor, xref+992-x, yref+992-y, C2D_FLIP_NENHUM, 1.0, 1.0, rotacao);
         break;
     case 270:
+        C2D_DesenhaSpriteEspecial(sprite, cor, xref+y, yref+992-x, C2D_FLIP_NENHUM, 1.0, 1.0, rotacao);
         break;
     }
 }
@@ -72,4 +75,7 @@ void Jogador::desenha(const int angulo, const int xref, const int yref)
 void Jogador::rotaciona(const int angulo)
 {
     direcao=angulo;
+    rotacao+=angulo;
+    if(rotacao>=360)
+        rotacao-=360;
 }

@@ -1,4 +1,4 @@
-tileset	./gfx/teleset.png
+tileset	./gfx/tileset.png
 stage_title	Stage Blah
 trigged_messages	4
 Press the right shoulder, the right key or the D key to turn the world clockwise.

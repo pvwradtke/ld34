@@ -255,7 +255,7 @@ bool Game::gamescreen(Jogador &jogador, int numFase, char *arquivoFase)
     Fase    fase=Fase();
     int angulo=0;
     bool debug=false;
-    if(fase.carrega(arquivoFase))
+    if(!fase.carrega(arquivoFase))
     {
         printf("Failed loading stage %s.\n", arquivoFase);
         return false;
@@ -302,8 +302,8 @@ bool Game::gamescreen(Jogador &jogador, int numFase, char *arquivoFase)
         C2D_LimpaTela();
         int x_desl=(1920-32*32)/2;
         int y_desl=(1080-32*32)/2;
-        fase.desenha(angulo, x_desl, y_desl, debug);
-        jogador.desenha(angulo, x_desl, y_desl);
+        fase.desenha(x_desl, y_desl, angulo, debug);
+        jogador.desenha(x_desl, y_desl, angulo);
         C2D_Sincroniza(C2D_FPS_PADRAO);
         if(teclado[C2D_TESC].pressionou)
             fim=true;

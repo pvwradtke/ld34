@@ -25,7 +25,7 @@ class Jogador
         virtual ~Jogador();
         bool inicializa(Fase &mapa);
         int atualiza(Fase &fase);
-        void desenha(const int angulo, const int xref, const int yref);
+        void desenha(const int xref, const int yref, const int angulo);
         void rotaciona(const int angulo);
     protected:
     private:

@@ -25,7 +25,7 @@ bool Fase::carrega(const char *nomeArquivo)
             return false;
         }
         // Processa o tipo do dado
-        if(strcmp(tipo, "stage_title")==0 && !title){
+        if(strcmp(tipo, "stage_title")==0 && !ltitle){
             if(fscanf(arquivo, "%*[ \n\t]%[^\t\n]", title)==0){
                 fclose(arquivo);
                 return(false);
@@ -107,11 +107,16 @@ bool Fase::carrega(const char *nomeArquivo)
         for(int j=0;j<largura;j++)
             if(geometria[i][j]!=0)
                 geometria[i][j]-=marca-1;
-    return init=true;
+    init=true;
+    return true;
 }
 
 void Fase::imprime()
 {
+    if(!init){
+        printf("Fase não carregada.\n");
+        return;
+    }
     printf("Titulo: %s\n", title);
     printf("Tileset: %d\n", tileset);
     printf("Mapa:\n");
@@ -177,6 +182,8 @@ void Fase::desenha(int x_desl, int y_desl, int angulo, bool debug)
 
 bool Fase::procuraPrimeiraMarca(const int marca, int *x, int *y)
 {
+    if(!init)
+        return false;
     bool achou=false;
     for(int i=0;i<altura && !achou;i++)
         for(int j=0;j<largura && !achou;j++)
