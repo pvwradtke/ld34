@@ -13,31 +13,16 @@
 #include <c2d3/chien2d.h>
 #include <c2d3/chienaudio.h>
 
-#include "Jogador.h"
+#include "headers.h"
+#include "Jogador.hpp"
 
 #define     PI              3.14159265
 #define     MAX_FASES       64
-#define     MAX_TRIGGERS    5
-#define     MAX_TEXTO       512
-#define     MAX_MAPA        32
 
-typedef struct TagFase
-{
-    char    title[MAX_TEXTO];
-    int     num_trigger;
-    char    trigger_messages[MAX_TRIGGERS][MAX_TEXTO];
-    bool    trigger_activated[MAX_TRIGGERS];
-    int     largura, altura;
-    int     mapa[MAX_MAPA][MAX_MAPA];
-    int     marca;
-    int     geometria[MAX_MAPA][MAX_MAPA];
-}Fase;
 
 class Game {
 public:
     enum States{splash, mainmenu, help, game_keyplusmouse, game_gamepad, tutorial, credits, gameover, quit};
-    enum marcas{JOGO_NADA=0, JOGO_JOGADOR, JOGO_SOLIDO, JOGO_FIM, JOGO_MORTE,
-            JOGO_TRIGGER_0, JOGO_TRIGGER_1, JOGO_TRIGGER_2, JOGO_TRIGGER_3, JOGO_TRIGGER_4};
     enum EventDescriptorType {eventtext};
     Game();
     virtual ~Game();
@@ -49,7 +34,7 @@ public:
     bool carregaListaFases(char *nome, int *numFases, char lista[MAX_FASES][MAX_TEXTO]);
     bool carregaFase(char *nome, Fase *fase);
     void imprimeFase(Fase *fase);
-    bool gamescreen(Jogador *jogador, int numFase, char *arquivoFase);
+    bool gamescreen(Jogador &jogador, int numFase, char *arquivoFase);
     float calculaAngulo(const float dx, const float dy);
     bool loadhighscore();
     bool savehighscore();

@@ -1,7 +1,7 @@
-#ifndef JOGADOR_H
-#define JOGADOR_H
+#ifndef JOGADOR_HPP
+#define JOGADOR_HPP
 
-#include "Game.hpp"
+#include "headers.h"
 
 #define     DIM_JOGADOR     32
 #define     VJOGADOR        1.0
@@ -30,4 +30,4 @@ class Jogador
     private:
 };
 
-#endif // JOGADOR_H
+#endif // JOGADOR_HPP

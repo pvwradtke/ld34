@@ -1,5 +1,6 @@
+#include "Jogador.hpp"
 #include <cstdlib>
-#include "Jogador.h"
+#include <c2d3/chien2d.h>
 
 unsigned int Jogador::sprite=0;
 
@@ -52,7 +53,7 @@ void Jogador::desenha(const int angulo, const Fase *mapa, const int xref, const 
     switch(angulo)
     {
     case 0:
-        C2D_DesenhaSprite(sprite)
+        C2D_DesenhaSprite(sprite, cor, xref+x, yref+y);
         break;
     case 90:
         break;

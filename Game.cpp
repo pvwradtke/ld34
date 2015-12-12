@@ -69,8 +69,8 @@ bool Game::run(){
             case Game::game_gamepad:
             case Game::game_keyplusmouse:{
                 int numFases;
-                Jogador jogador();
-                bool resultado = gamescreen(&jogador, 1, "./levels/testlevel.dat");
+                Jogador jogador=Jogador();
+                bool resultado = gamescreen(jogador, 1, "./levels/testlevel.dat");
 /*                if(!carregaListaFases("maps/level_list.dat", &numFases, listaFases))
                 {
                     printf("Erro ao carregar as fases!\n");
@@ -341,7 +341,7 @@ void Game::imprimeFase(Fase *fase)
         printf("Trigger %d: %s\n", i+1, fase->trigger_messages[i]);
 }
 
-bool Game::gamescreen(Jogador *jogador, int numFase, char *arquivoFase)
+bool Game::gamescreen(Jogador &jogador, int numFase, char *arquivoFase)
 {
     // Load resources
     char mensagem[512];
@@ -366,7 +366,7 @@ bool Game::gamescreen(Jogador *jogador, int numFase, char *arquivoFase)
         return false;
     }
     imprimeFase(&fase);
-    jogador->inicializa(&fase);
+    jogador.inicializa(&fase);
 
 /*    if(!carregaFase(arquivoFase, mensagem, mapa, arquivoMusica))
     {
