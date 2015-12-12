@@ -1,0 +1,30 @@
+stage_title	Stage Blah
+trigged_messages	4
+Press the right shoulder, the right key or the D key to turn the world clockwise.
+Press the left shoulder, the right key or the D key to turn the world clockwise.
+Seems you got it right, just wait until the ball gets to the goal.
+Whoops, don't let the ball fall for too long. It'll break if it hits the ground too hard.
+map	10	10
+2 2 2 2 2 2 2 2 2 2
+2 1 1 1 1 1 1 1 1 2
+2 1 1 1 1 1 1 1 1 2
+2 1 1 1 1 1 1 1 1 2
+2 1 1 1 1 1 1 1 1 2
+2 1 1 1 1 1 1 1 1 2
+2 1 1 1 1 1 1 1 1 2
+2 1 1 1 1 1 1 1 1 2
+2 1 1 1 2 2 1 1 3 2
+2 2 2 2 2 2 2 2 2 2
+marker	25
+geometry	10	10
+33 33 33 33 33 33 33 33 33 33
+33 0 0 0 0 0 0 0 0 33
+33 0 0 0 0 0 0 0 0 33
+33 0 0 0 0 0 0 0 0 33
+33 39 39 39 39 39 39 39 39 33
+33 0 0 0 0 0 0 0 0 33
+33 0 0 0 0 0 0 0 0 33
+33 0 0 0 0 37 0 0 39 33
+33 32 0 36 33 33 38 0 34 33
+33 33 33 33 33 33 33 33 33 33
+

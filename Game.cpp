@@ -33,13 +33,6 @@ bool Game::init(bool fullscreen){
     {
         fonteSistema = C2D_CarregaFonte("gfx/TerminusBold.ttf", "sistema", 24);
         fonteURL = C2D_CarregaFonte("gfx/TerminusBold.ttf", "URL", 60);
-        fonteTituloPequena = C2D_CarregaFonte("gfx/Stac555n.ttf", "titulo_pequena", 120);
-        fonteTituloGrande = C2D_CarregaFonte("gfx/Abduction.ttf", "titulo_grande", 130);
-        fonteMensagem = C2D_CarregaFonte("gfx/Stac555n.ttf", "titulo_pequena", 60);
-        fontePlacar = C2D_CarregaFonte("gfx/DS-DIGIB.TTF", "titulo_placar", 32);
-        efeitoInimigo = CA_CarregaEfeito("audio/enemyhit.ogg");
-        efeitoJogador = CA_CarregaEfeito("audio/playerhit.ogg");
-        efeitoRepele = CA_CarregaEfeito("audio/repel.ogg");
         teclado = C2D_PegaTeclas();
         gamepads = C2D_PegaGamepads();
         mouse = C2D_PegaMouse();
@@ -47,8 +40,8 @@ bool Game::init(bool fullscreen){
     }
     else
         return false;
-    if(!loadhighscore())
-        highScore = 3;
+//    if(!loadhighscore())
+//        highScore = 3;
     return true;
 }
 
@@ -76,7 +69,9 @@ bool Game::run(){
             case Game::game_gamepad:
             case Game::game_keyplusmouse:{
                 int numFases;
-                if(!carregaListaFases("maps/level_list.dat", &numFases, listaFases))
+                Jogador jogador();
+                bool resultado = gamescreen(&jogador, 1, "./levels/testlevel.dat");
+/*                if(!carregaListaFases("maps/level_list.dat", &numFases, listaFases))
                 {
                     printf("Erro ao carregar as fases!\n");
                     currentstate = Game::mainmenu;
@@ -116,7 +111,8 @@ bool Game::run(){
                         currentstate = Game::credits;
                     else
                         currentstate = Game::mainmenu;
-                }
+                }*/
+                currentstate = Game::mainmenu;
                 break;
             }
             case Game::tutorial:
@@ -183,16 +179,14 @@ int Game::mainmenuscreen(){
 
     int choice;
     C2D_TrocaCorLimpezaTela(0,0,0);
-    int musica = CA_CarregaMusica("audio/01-menu.ogg");
-    CA_TocaMusica(musica, 1);
+    //int musica = CA_CarregaMusica("audio/01-menu.ogg");
+    //CA_TocaMusica(musica, 1);
     while(!end){
         C2D_LimpaTela();
-        C2D_DesenhaTexto(fonteTituloGrande, 960, 350, "Magnetic  Force", C2D_TEXTO_CENTRALIZADO, 230, 230, 230, 255);
-        C2D_DesenhaTexto(fonteTituloPequena, 960, 200, "Mighty", C2D_TEXTO_CENTRALIZADO, 255, 0, 0, 255);
-        C2D_DesenhaTexto(fonteSistema, 960, 600, "Press Gamepad button A button to play with the Gamepad (BEST!)", C2D_TEXTO_CENTRALIZADO, 255, 255, 255, 255);
-        C2D_DesenhaTexto(fonteSistema, 960, 640, "Press Space to play with Keyboard+Mouse (or go out and buy a Gamepad)", C2D_TEXTO_CENTRALIZADO, 255, 255, 255, 255);
+        C2D_DesenhaTexto(fonteSistema, 960, 600, "Press a Gamepad shoulder button to play with the gamepad", C2D_TEXTO_CENTRALIZADO, 255, 255, 255, 255);
+        C2D_DesenhaTexto(fonteSistema, 960, 640, "Press Space to play with Keyboard", C2D_TEXTO_CENTRALIZADO, 255, 255, 255, 255);
         C2D_DesenhaTexto(fonteSistema, 960, 800, "Press ESC to quit", C2D_TEXTO_CENTRALIZADO, 255, 255, 255, 255);
-        C2D_DesenhaTexto(fonteSistema, 960, 900, "(c) 2013 Paulo V W Radtke - follow me at @pvwradtke or http://chienloco.com/wp/", C2D_TEXTO_CENTRALIZADO, 255, 255, 255, 255);
+        C2D_DesenhaTexto(fonteSistema, 960, 900, "(c) 2015 Paulo V W Radtke - follow me at @pvwradtke or http://chienloco.com/wp/", C2D_TEXTO_CENTRALIZADO, 255, 255, 255, 255);
         C2D_Sincroniza(C2D_FPS_PADRAO);
         if(teclado[C2D_TESC].pressionou)
         {
@@ -209,7 +203,7 @@ int Game::mainmenuscreen(){
             end=true;
             choice = Game::game_keyplusmouse;
         }
-        else if(gamepads[0].botoes[C2D_GBOTAO_A].pressionou)
+        else if(gamepads[0].botoes[C2D_GBOTAO_LS].pressionou || gamepads[0].botoes[C2D_GBOTAO_RS].pressionou)
         {
             end = true;
             choice = Game::game_gamepad;
@@ -242,32 +236,139 @@ bool Game::carregaListaFases(char *nome, int *numFases, char lista[MAX_FASES][MA
     return true;
 }
 
-bool Game::gamescreen(Jogador *jogador, int controle, int numFase, int *placar, char *arquivoFase)
+bool Game::carregaFase(char *nome, Fase *fase)
 {
-    // The current map
-    Mapa mapa;
-    //memset(mapa, JOGO_CHAO, 33*59*sizeof(int));
+    FILE *arquivo = fopen(nome, "r");
+    bool title=false, triggers=false, mapa=false, geometria=false, marker=false;
+    char tipo[MAX_TEXTO];
+    while(!feof(arquivo) && (!title || !triggers || !mapa || !geometria || !marker))
+    {
+        // Lê o tipo do dado que vem agora
+        if(fscanf(arquivo, "%s", tipo) == 0){
+            fclose(arquivo);
+            return false;
+        }
+        // Processa o tipo do dado
+        if(strcmp(tipo, "stage_title")==0 && !title){
+            if(fscanf(arquivo, "%*[ \n\t]%[^\t\n]", fase->title)==0){
+                fclose(arquivo);
+                return(false);
+            }
+            title=true;
+        }
+        else if(strcmp(tipo, "trigged_messages")==0 && !triggers){
+            if(fscanf(arquivo, "%d", &fase->num_trigger)==0){
+                fclose(arquivo);
+                return(false);
+            }
+            for(int i=0;i<fase->num_trigger;i++){
+                if(fscanf(arquivo, "%*[ \n\t]%[^\t\n]", fase->trigger_messages[i])==0){
+                    fclose(arquivo);
+                    return false;
+                }
+                fase->trigger_activated[i]=false;
+            }
+            // Para garantir, inicializa os triggers não utilizados
+            for(int i=fase->num_trigger;i<MAX_TRIGGERS;i++)
+                fase->trigger_activated[i]=true;
+            triggers=true;
+        }
+        else if(strcmp(tipo, "map")==0){
+            if(fscanf(arquivo, "%d %d", &fase->largura, &fase->altura)<2){
+                fclose(arquivo);
+                return false;
+            }
+            for(int i=0;i<fase->altura;i++)
+                for(int j=0;j<fase->largura;j++)
+                    if(fscanf(arquivo, "%d", &fase->mapa[i][j])==0){
+                        fclose(arquivo);
+                        return false;
+                    }
+            mapa=true;
+        }
+        else if(strcmp(tipo, "marker")==0){
+            if(fscanf(arquivo, "%d", &fase->marca)==0){
+                fclose(arquivo);
+                return(false);
+            }
+            marker=true;
+        }
+        else if(strcmp(tipo, "geometry")==0){
+            int largura, altura;
+            if(fscanf(arquivo, "%d %d", &largura, &altura)<2){
+                fclose(arquivo);
+                return false;
+            }
+            for(int i=0;i<altura;i++)
+                for(int j=0;j<largura;j++)
+                    if(fscanf(arquivo, "%d", &fase->geometria[i][j])==0){
+                        fclose(arquivo);
+                        return false;
+                    }
+            geometria=true;
+        }
+    }
+    // Verifica que leu tudo
+    if(!title || !triggers || !mapa || !geometria || !marker)
+        return false;
+    // Processa a camada de geometria
+    for(int i=0;i<fase->altura;i++)
+        for(int j=0;j<fase->largura;j++)
+            if(fase->geometria[i][j]!=0)
+                fase->geometria[i][j]-=fase->marca-1;
+    return true;
+}
+
+void Game::imprimeFase(Fase *fase)
+{
+    printf("Titulo: %s\n", fase->title);
+    printf("Mapa:\n");
+    for(int i=0;i<fase->altura;i++)
+    {
+        for(int j=0;j<fase->largura;j++)
+            printf("%d\t", fase->mapa[i][j]);
+        printf("\n");
+    }
+    printf("Geometria:\n");
+    for(int i=0;i<fase->altura;i++)
+    {
+        for(int j=0;j<fase->largura;j++)
+            printf("%d\t", fase->geometria[i][j]);
+        printf("\n");
+    }
+    printf("Marca: %d\n", fase->marca);
+    for(int i=0;i<fase->num_trigger;i++)
+        printf("Trigger %d: %s\n", i+1, fase->trigger_messages[i]);
+}
+
+bool Game::gamescreen(Jogador *jogador, int numFase, char *arquivoFase)
+{
     // Load resources
-    int cenario = C2D_CarregaSpriteSet("gfx/map.png", 32, 32);
-    int spriteJogador = C2D_CarregaSpriteSet("gfx/jogador.png", 32, 32);
-    int spriteIma = C2D_CarregaSpriteSet("gfx/imas.png", 20, 20);
-    int spritemouse = C2D_CarregaSpriteSet("gfx/mouse.png", 0, 0);
-    int spriteEstrela =C2D_CarregaSpriteSet("gfx/inimigo.png", 32, 32);
-    int spriteFaixa = C2D_CarregaSpriteSet("gfx/faixa.png", 0, 0);
     char mensagem[512];
     char arquivoMusica[512];
 
     bool acabouFase = false;
     int tempoMensagem=180;
+    unsigned int tileset = C2D_CarregaSpriteSet("./gfx/tileset.png", 32, 32);
+    unsigned int spriteJogador = C2D_CarregaSpriteSet("./gfx/colored.png", 32, 32);
     char *listaMusicas[4]= {
         "audio/02-tutorial.ogg",
         "audio/03-tutorial2.ogg",
         "audio/05-youknowthosekillright.ogg",
         "audio/06-thinkfast.ogg"
     };
+    Fase    fase;
+    int angulo=0;
+    bool debug=true;
+    if(!carregaFase(arquivoFase, &fase))
+    {
+        printf("Failed loading stage %s.\n", arquivoFase);
+        return false;
+    }
+    imprimeFase(&fase);
+    jogador->inicializa(&fase);
 
-
-    if(!carregaFase(arquivoFase, mensagem, mapa, arquivoMusica))
+/*    if(!carregaFase(arquivoFase, mensagem, mapa, arquivoMusica))
     {
         printf("Erro ao carregar a fase %s\n", arquivoFase);
         return false;
@@ -282,542 +383,76 @@ bool Game::gamescreen(Jogador *jogador, int controle, int numFase, int *placar, 
     }
 
     int musica = CA_CarregaMusica(arquivoMusica);
-    int musicaClear = CA_CarregaMusica("audio/04-stage_clear.ogg");
+    int musicaClear = CA_CarregaMusica("audio/04-stage_clear.ogg");*/
 
     // Inicializa a fase com os dados do mapa
-    Personagem imas[MAX_IMAS];
-    Personagem estrelas[MAX_ESTRELAS];
-    processaFase(mapa, jogador, imas, estrelas);
-
     char texto[128];
 
     C2D_TrocaCorLimpezaTela(0,0,0);
     bool fim=false;
     bool sai=false;
-    bool acabouEstrelas=false;
-    CA_TocaMusica(musica, -1);
     while(!fim && !sai)
     {
-        // Lógica dos personagens
-        // Verifica se deve desenhar a mensagem (pára a lógica)
-        if(tempoMensagem>0)
-        {
-            tempoMensagem--;
-            if(tempoMensagem==0)
-                if(acabouEstrelas)
-                    fim=true;
+        // roda a lógica
+        if(teclado[C2D_TDIREITA].pressionou || teclado[C2D_TD].pressionou || gamepads[0].botoes[C2D_GBOTAO_R].pressionou)
+            angulo=(angulo+90)%360;
+        else if(teclado[C2D_TESQUERDA].pressionou || teclado[C2D_TA].pressionou || gamepads[0].botoes[C2D_GBOTAO_L].pressionou){
+            angulo=(angulo-90);
+            if(angulo<0)
+                angulo=270;
         }
-        else
-        {
-            atualizaJogador(mapa, jogador, controle);
-            for(int i=0;i<MAX_IMAS;i++)
-                    if(imas[i].tipo!=JOGO_MORTO)
-                        atualizaIma(mapa, &imas[i], jogador);
-            for(int i=0;i<MAX_ESTRELAS;i++)
-                if(estrelas[i].tipo != JOGO_MORTO)
-                    atualizaEstrela(mapa, &estrelas[i]);
-            // Algum ímã atingiu uma estrela
-            int parcial=colisoesImasEstrelas(imas, estrelas);
-            if(*placar<highScore && *placar+parcial>highScore)
-                printf("quebrou o recorde");
-            *placar+=parcial;
-            if(*placar>highScore)
-                highScore=*placar;
-            // Acabaram as estrelas?
-            acabouEstrelas=true;
-            for(int i=0;i<MAX_ESTRELAS;i++)
-            {
-                if(estrelas[i].tipo!=JOGO_MORTO)
-                    acabouEstrelas=false;
-            }
-            if(teclado[C2D_TF1].pressionou)
-                acabouEstrelas=true;
-            if(acabouEstrelas)
-            {
-                tempoMensagem=180;
-                sprintf(mensagem, "Stage %d clear", numFase+1);
-                CA_FadeMusica(0);
-                CA_TocaMusica(musicaClear,1);
-            }
-            // O jogador colidiu com uma estrela?
-            if(colisaoJogadorEstrelas(jogador, estrelas))
-            {
-                jogador->vivo=false;
-                jogador->tempoMorte=180;
-            }
-            if(!jogador->vivo && jogador->tempoMorte==0)
-                fim=true;
-        }
-
-        if(teclado[C2D_TESC].pressionou || teclado[C2D_TENCERRA].pressionou)
-            sai=true;
-
+        if(teclado[C2D_TF12].pressionou)
+            debug=!debug;
+        // Desenha a tela
         C2D_LimpaTela();
-        // Desenha o mapa
-        for(int i=0;i<33;i++)
-            for(int j=0;j<59;j++)
-                if(mapa[i][j]==JOGO_CHAO)
-                    C2D_DesenhaSprite(cenario, 0, DESLX+32*j, DESLY+32*i);
-                else if(mapa[i][j]==JOGO_PAREDE)
-                    C2D_DesenhaSprite(cenario, 1, DESLX+32*j, DESLY+32*i);
-        // Desenha os personagens
-        for(int i=0;i<MAX_ESTRELAS;i++)
-            if(estrelas[i].tipo!=JOGO_MORTO)
-            {
-                if(estrelas[i].tipo == JOGO_ESTRELA_MORRENDO)
-                {
-                    C2D_AlteraAlphaDoSprite(spriteEstrela, estrelas[i].timer);
-                    if((estrelas[i].timer/4)%2)
-                        C2D_DesenhaSpriteEspecial(spriteEstrela, 1, DESLX+estrelas[i].x, DESLY+estrelas[i].y, C2D_FLIP_NENHUM, 1.0, 1.0, estrelas[i].anguloRotacao);
-                    C2D_RestauraAlphaDoSprite(spriteEstrela);
+        if(angulo==0){
+            int x_desl=(1920-fase.largura*32)/2;
+            int y_desl=(1080-fase.altura*32)/2;
+            for(int i=0;i<fase.altura;i++)
+                for(int j=0;j<fase.largura;j++){
+                    C2D_DesenhaSpriteEspecial(tileset, fase.mapa[i][j]-1, x_desl+32*j, y_desl+32*i, C2D_FLIP_NENHUM, 1.0, 1.0, angulo);
+                    if(debug && fase.geometria[i][j])
+                        C2D_DesenhaSpriteEspecial(tileset, fase.geometria[i][j]+fase.marca-1, x_desl+32*j, y_desl+32*i, C2D_FLIP_NENHUM, 1.0, 1.0, angulo);
                 }
-                else
-                    C2D_DesenhaSpriteEspecial(spriteEstrela, 0, DESLX+estrelas[i].x, DESLY+estrelas[i].y, C2D_FLIP_NENHUM, 1.0, 1.0, estrelas[i].anguloRotacao);
-            }
-        if(jogador->vivo)
-            C2D_DesenhaSpriteEspecial(spriteJogador, 0, DESLX+(int)jogador->x, DESLY+(int)jogador->y, C2D_FLIP_NENHUM, 1.0, 1.0, jogador->angulo);
-        else
-        {
-            C2D_AlteraAlphaDoSprite(spriteJogador, jogador->tempoMorte);
-            if((jogador->tempoMorte/4)%2)
-                C2D_DesenhaSpriteEspecial(spriteJogador, 1, DESLX+(int)jogador->x, DESLY+(int)jogador->y, C2D_FLIP_NENHUM, 1.0, 1.0, jogador->angulo);
-            C2D_RestauraAlphaDoSprite(spriteJogador);
-        }
-        for(int i=0;i<MAX_IMAS;i++)
-            if(imas[i].tipo!=JOGO_MORTO)
-                C2D_DesenhaSprite(spriteIma, imas[i].tipo-JOGO_NEGATIVO, DESLX+(int)imas[i].x, DESLY+(int)imas[i].y);
-        if(controle == game_keyplusmouse)
-            C2D_DesenhaSprite(spritemouse, 0, mouse->x-TAM_MOUSE/2, mouse->y-TAM_MOUSE/2);
-        // Desenha o placar e demais informações
-        sprintf(texto, "Stage %02d", numFase+1);
-        C2D_DesenhaTexto(fontePlacar, 50, 20, texto, C2D_TEXTO_ESQUERDA, 0, 255, 0, 255);
-        sprintf(texto, "Score: %03d00", *placar);
-        C2D_DesenhaTexto(fontePlacar, 960, 20, texto, C2D_TEXTO_CENTRALIZADO, 0, 255, 0, 255);
-        sprintf(texto, "Record: %03d00", highScore);
-        C2D_DesenhaTexto(fontePlacar, 1870, 20, texto, C2D_TEXTO_DIREITA, 0, 255, 0, 255);
-        if(tempoMensagem>0)
-        {
-            C2D_DesenhaSprite(spriteFaixa, 0, 0, 400);
-            C2D_DesenhaTexto(fonteMensagem, 960, 410, mensagem, C2D_TEXTO_CENTRALIZADO, 255, 255, 255, 255);
+        }else if(angulo==90){
+            int x_desl=(1920-fase.altura*32)/2;
+            int y_desl=(1080-fase.largura*32)/2;
+            for(int i=0;i<fase.altura;i++)
+                for(int j=0;j<fase.largura;j++){
+                    C2D_DesenhaSpriteEspecial(tileset, fase.mapa[fase.altura-1-j][i]-1, x_desl+32*j, y_desl+32*i, C2D_FLIP_NENHUM, 1.0, 1.0, angulo);
+                    if(debug && fase.geometria[fase.altura-1-j][i])
+                        C2D_DesenhaSpriteEspecial(tileset, fase.geometria[fase.altura-1-j][i]+fase.marca-1, x_desl+32*j, y_desl+32*i, C2D_FLIP_NENHUM, 1.0, 1.0, angulo);
+                }
+        }else if(angulo==180){
+            int x_desl=(1920-fase.largura*32)/2;
+            int y_desl=(1080-fase.altura*32)/2;
+            for(int i=0;i<fase.altura;i++)
+                for(int j=0;j<fase.largura;j++){
+                    C2D_DesenhaSpriteEspecial(tileset, fase.mapa[fase.largura-1-i][fase.altura-1-j]-1, x_desl+32*j, y_desl+32*i, C2D_FLIP_NENHUM, 1.0, 1.0, angulo);
+                    if(debug && fase.geometria[fase.largura-1-i][fase.altura-1-j])
+                        C2D_DesenhaSpriteEspecial(tileset, fase.geometria[fase.largura-1-i][fase.altura-1-j]+fase.marca-1, x_desl+32*j, y_desl+32*i, C2D_FLIP_NENHUM, 1.0, 1.0, angulo);
+                }
+        }else if(angulo==270){
+            int x_desl=(1920-fase.altura*32)/2;
+            int y_desl=(1080-fase.largura*32)/2;
+            for(int i=0;i<fase.altura;i++)
+                for(int j=0;j<fase.largura;j++){
+                    C2D_DesenhaSpriteEspecial(tileset, fase.mapa[j][fase.largura-1-i]-1, x_desl+32*j, y_desl+32*i, C2D_FLIP_NENHUM, 1.0, 1.0, angulo);
+                    if(debug && fase.geometria[j][fase.largura-1-i])
+                        C2D_DesenhaSpriteEspecial(tileset, fase.geometria[j][fase.largura-1-i]+fase.marca-1, x_desl+32*j, y_desl+32*i, C2D_FLIP_NENHUM, 1.0, 1.0, angulo);
+
+                }
         }
         C2D_Sincroniza(C2D_FPS_PADRAO);
-
+        if(teclado[C2D_TESC].pressionou)
+            fim=true;
     }
     CA_FadeMusica(0);
+    C2D_RemoveSpriteSet(tileset);
+    C2D_RemoveSpriteSet(spriteJogador);
     if(sai)
         return false;
     return true;
-}
-
-void Game::processaFase(Mapa mapa, Jogador *jogador, Personagem imas[], Personagem estrelas[])
-{
-    // Procura os elementos
-    int contaImas=0;
-    int contaEstrelas=0;
-    for(int i=0;i<33;i++)
-        for(int j=0;j<59;j++)
-        {
-            switch(mapa[i][j])
-            {
-            case JOGO_JOGADOR:
-                jogador->x=32*j;
-                jogador->y=32*i;
-                jogador->angulo=0;
-                mapa[i][j]=JOGO_CHAO;
-                jogador->vivo=true;
-                break;
-            case JOGO_NEGATIVO:
-            case JOGO_POSITIVO:
-                if(contaImas<MAX_IMAS)
-                {
-                    imas[contaImas].tipo=mapa[i][j];
-                    imas[contaImas].angulo=0;
-                    imas[contaImas].velocidade=0;
-                    imas[contaImas].x=32*j+(32-TAM_IMA)/2;
-                    imas[contaImas].y=32*i+(32-TAM_IMA)/2;
-                    mapa[i][j]=JOGO_CHAO;
-                    contaImas++;
-                }
-                break;
-            case JOGO_ESTRELA:
-                if(contaEstrelas<MAX_ESTRELAS)
-                {
-                    estrelas[contaEstrelas].tipo=mapa[i][j];
-                    estrelas[contaEstrelas].angulo=0;
-                    estrelas[contaEstrelas].velocidade=0;
-                    estrelas[contaEstrelas].x=32*j;
-                    estrelas[contaEstrelas].y=32*i;
-                    estrelas[contaEstrelas].anguloRotacao=rand()%360;
-                    mapa[i][j]=JOGO_CHAO;
-                    contaEstrelas++;
-                }
-                break;
-            case JOGO_ESTRELA0:
-            case JOGO_ESTRELA45:
-            case JOGO_ESTRELA90:
-            case JOGO_ESTRELA135:
-            case JOGO_ESTRELA180:
-            case JOGO_ESTRELA225:
-            case JOGO_ESTRELA270:
-            case JOGO_ESTRELA315:
-                if(contaEstrelas<MAX_ESTRELAS)
-                {
-                    estrelas[contaEstrelas].tipo=mapa[i][j];
-                    estrelas[contaEstrelas].angulo=45*(mapa[i][j]-JOGO_ESTRELA0);
-                    estrelas[contaEstrelas].velocidade=VELOCIDADE_ESTRELA;
-                    estrelas[contaEstrelas].x=32*j;
-                    estrelas[contaEstrelas].y=32*i;
-                    estrelas[contaEstrelas].anguloRotacao=rand()%360;
-                    mapa[i][j]=JOGO_CHAO;
-                    contaEstrelas++;
-                }
-                break;
-            }
-        }
-    // Reseta os imas restantes
-    for(int i=contaImas;i<MAX_IMAS;i++)
-        imas[i].tipo=JOGO_MORTO;
-    for(int i=contaEstrelas;i<MAX_ESTRELAS;i++)
-        estrelas[i].tipo=JOGO_MORTO;
-}
-
-bool Game::carregaFase(char *name, char *mensagem, Mapa mapa, char *song)
-{
-    FILE *arquivo = fopen(name, "r");
-    if(arquivo==0)
-        return false;
-    if(fgets(mensagem, 256, arquivo))
-        // Removes the new line in the end of this string
-        mensagem[strlen(mensagem)-1]=0;
-    else{
-        fclose(arquivo);
-        return false;
-    }
-    if(fgets(song, 256, arquivo))
-        // Removes the new line in the end of this string
-        song[strlen(song)-1]=0;
-    else{
-        fclose(arquivo);
-        return false;
-    }
-
-    // reds the map
-    for(int i=0;i<MAPA_LINHAS;i++)
-        for(int j=0;j<MAPA_COLUNAS;j++)
-            if(fscanf(arquivo, "%d", &mapa[i][j])==0)
-            {
-                fclose(arquivo);
-                return false;
-            }
-    return true;
-}
-
-void Game::atualizaJogador(Mapa mapa, Jogador *jogador, int controle)
-{
-    static int counter =0;
-    if(jogador->vivo)
-    {
-        // as variáveis para guardar as coordenadas do jogador
-        int x=jogador->x, y=jogador->y;
-        // Escolhe se o controle é pelo gamepad ou pelo teclado
-        if(controle==Game::game_gamepad)
-        {
-            if(gamepads[0].eixos[C2D_GLEIXOX]!=0 || gamepads[0].eixos[C2D_GLEIXOY]!=0)
-            {
-                // Calcula o ângulo do deslocamento
-                float angulo = calculaAngulo(gamepads[0].eixos[C2D_GLEIXOX], gamepads[0].eixos[C2D_GLEIXOY]);
-                // Calcula a nova posição
-                x = jogador->x+cos(angulo*PI/180)*VELOCIDADE_JOGADOR;
-                y = jogador->y+sin(angulo*PI/180)*VELOCIDADE_JOGADOR;
-
-            }
-            // Calcula o angulo em que desenha o elemento
-            if(gamepads[0].eixos[C2D_GREIXOX]!=0 || gamepads[0].eixos[C2D_GREIXOY]!=0)
-                jogador->angulo=calculaAngulo(gamepads[0].eixos[C2D_GREIXOX], gamepads[0].eixos[C2D_GREIXOY]);
-        }
-        else
-        {
-            if((teclado[C2D_TESQUERDA].pressionando && !teclado[C2D_TCIMA].pressionando && !teclado[C2D_TBAIXO].pressionando) ||
-               (teclado[C2D_TA].pressionando && !teclado[C2D_TW].pressionando && !teclado[C2D_TS].pressionando))
-                x=jogador->x-VELOCIDADE_JOGADOR;
-            else if((teclado[C2D_TDIREITA].pressionando && !teclado[C2D_TCIMA].pressionando && !teclado[C2D_TBAIXO].pressionando) ||
-                    (teclado[C2D_TD].pressionando && !teclado[C2D_TW].pressionando && !teclado[C2D_TS].pressionando))
-                x=jogador->x+VELOCIDADE_JOGADOR;
-            else if((teclado[C2D_TCIMA].pressionando && !teclado[C2D_TDIREITA].pressionando && !teclado[C2D_TESQUERDA].pressionando) ||
-                    (teclado[C2D_TW].pressionando && !teclado[C2D_TD].pressionando && !teclado[C2D_TA].pressionando))
-                y=jogador->y-VELOCIDADE_JOGADOR;
-            else if((teclado[C2D_TBAIXO].pressionando && !teclado[C2D_TDIREITA].pressionando && !teclado[C2D_TESQUERDA].pressionando) ||
-                    (teclado[C2D_TS].pressionando && !teclado[C2D_TD].pressionando && !teclado[C2D_TA].pressionando))
-                y=jogador->y+VELOCIDADE_JOGADOR;
-            else if((teclado[C2D_TCIMA].pressionando && teclado[C2D_TDIREITA].pressionando) || (teclado[C2D_TW].pressionando && teclado[C2D_TD].pressionando))
-            {
-                x=jogador->x+VELOCIDADE_JOGADOR*0.707106781;
-                y=jogador->y-VELOCIDADE_JOGADOR*0.707106781;
-            }
-            else if((teclado[C2D_TCIMA].pressionando && teclado[C2D_TESQUERDA].pressionando) || (teclado[C2D_TW].pressionando && teclado[C2D_TA].pressionando))
-            {
-                x=jogador->x-VELOCIDADE_JOGADOR*0.707106781;
-                y=jogador->y-VELOCIDADE_JOGADOR*0.707106781;
-            }
-            else if((teclado[C2D_TBAIXO].pressionando && teclado[C2D_TESQUERDA].pressionando) || (teclado[C2D_TS].pressionando && teclado[C2D_TA].pressionando))
-            {
-                x=jogador->x-VELOCIDADE_JOGADOR*0.707106781;
-                y=jogador->y+VELOCIDADE_JOGADOR*0.707106781;
-            }
-            else if((teclado[C2D_TBAIXO].pressionando && teclado[C2D_TESQUERDA].pressionando) || (teclado[C2D_TS].pressionando && teclado[C2D_TA].pressionando))
-            {
-                x=jogador->x-VELOCIDADE_JOGADOR*0.707106781;
-                y=jogador->y+VELOCIDADE_JOGADOR*0.707106781;
-            }
-            else if((teclado[C2D_TBAIXO].pressionando && teclado[C2D_TDIREITA].pressionando) || (teclado[C2D_TS].pressionando && teclado[C2D_TD].pressionando))
-            {
-                x=jogador->x+VELOCIDADE_JOGADOR*0.707106781;
-                y=jogador->y+VELOCIDADE_JOGADOR*0.707106781;
-            }
-            jogador->angulo=calculaAngulo(mouse->x-jogador->x+(TAM_JOGADOR/2), mouse->y-jogador->y+(TAM_JOGADOR/2));
-        }
-        // Verifica se o jogador está entrando dentro de um bloco
-        int xesq = (int)x /32;
-        int xdir = ((int)x +32)/32;
-        int ycima = (int)y/32;
-        int ybaixo = ((int)y+ 32)/32;
-        int xmeio = ((int)x +16)/32;
-        int ymeio = ((int)y + 16)/32;
-        // Está batendo em cima?
-        if(mapa[ycima][xmeio] != JOGO_CHAO)
-            y=((ycima+1)*32);
-        else if(mapa[ybaixo][xmeio] != JOGO_CHAO)
-            y=((ycima)*32);
-        // Está batendo à esquerda
-        if(mapa[ymeio][xesq] != JOGO_CHAO)
-            x=(xesq+1)*32 ;
-        else if(mapa[ymeio][xdir] != JOGO_CHAO)
-            x=(xesq)*32;
-        // Atualiza a posição do jogador
-        jogador->x=x;
-        jogador->y=y;
-    }
-    else
-    {
-        jogador->tempoMorte-=2;
-        if(jogador->tempoMorte<0)
-            jogador->tempoMorte=0;
-
-    }
-}
-
-void Game::atualizaIma(Mapa mapa, Personagem *ima, Jogador *jogador)
-{
-    //  se o jogador está perto para ganhar velocidade e direção
-    int xcentroj = jogador->x + (TAM_JOGADOR/2);
-    int ycentroj = jogador->y + (TAM_JOGADOR/2);
-    int xcentroi = ima->x + TAM_IMA/2;
-    int ycentroi = ima->y + TAM_IMA/2;
-    // Calcula o quadrado da distância
-    float distancia = sqrt((xcentroj-xcentroi)*(xcentroj-xcentroi)+ (ycentroj-ycentroi)*(ycentroj-ycentroi));
-    // Se o quadrado da distância for menor que o quadrado da distância mínima
-    if(distancia < DISTANCIA_JOGADOR)
-    {
-        // Calcula o angulo entre o jogador e o íma
-
-        float anguloJogadorIma = calculaAngulo(xcentroi-xcentroj, ycentroi-ycentroj);
-        float anguloImaJogador = calculaAngulo(xcentroj-xcentroi, ycentroj-ycentroi);
-        // Calcula a diferença dos ângulos do jo
-        int diferenca=abs(anguloJogadorIma-(int)jogador->angulo);
-        // Caso seja maior que 270, normaliza o quadrante (casos especiais)
-        if(diferenca>270)
-            diferenca=360-diferenca;
-        //printf("Diferenca vale: %d\n", diferenca);
-        // Se for menor que 90, está apontando para o pólo positivo, se for maior que 90, aponta o põlo negativo
-        // Aqui, repele o ímã
-        if((diferenca < 45 && ima->tipo==JOGO_POSITIVO) || (diferenca>135 && ima->tipo==JOGO_NEGATIVO))
-        {
-            if(diferenca>90)
-                diferenca = 180-diferenca;
-            ima->angulo = anguloJogadorIma;
-            //ima->velocidade=VELOCIDADE_REPULSAO_IMA*(45.0-diferenca)/45.0;
-            // Se a velocidade é zero, toca o efeito
-            CA_TocaEfeito(efeitoRepele, xcentroi);
-            ima->velocidade=VELOCIDADE_REPULSAO_IMA;
-            ////printf("Deu velocidade de repulsao %f\n", ima->velocidade);
-        }
-        // Aqui faz o contrário, afasta os ímãs
-        else if((diferenca < 45 && ima->tipo==JOGO_NEGATIVO) || (diferenca>135 && ima->tipo==JOGO_POSITIVO))
-        {
-            // normaliza em zero
-            if(diferenca>90)
-                diferenca = 180-diferenca;
-            ima->angulo = anguloImaJogador;
-            //ima->velocidade=(VELOCIDADE_ATRACAO_IMA)*(45.0-diferenca)/45.0;
-            ima->velocidade=VELOCIDADE_ATRACAO_IMA;
-            if(distancia < TAM_JOGADOR/2 + TAM_IMA +5)
-                ima->velocidade=0;
-            //printf("Deu velocidade de atracao %f\n", ima->velocidade);
-        }
-
-    }
-    // Futura posição do ímã na tela
-    float x=ima->x+ima->velocidade*cos(ima->angulo*PI/180);
-    float y=ima->y+ima->velocidade*sin(ima->angulo*PI/180);
-
-    // Verifica se o jogador está entrando dentro de um bloco
-    int xesq = (int)x/32;
-    int xdir = ((int)x+TAM_IMA)/32;
-    int ycima = (int)y/32;
-    int ybaixo = ((int)y + TAM_IMA)/32;
-    int xmeio = ((int)x + TAM_IMA/2)/32;
-    int ymeio = ((int)y + TAM_IMA/2)/32;
-
-    bool bateu=false;
-    // Está batendo em cima?
-    if(mapa[ycima][xmeio] != JOGO_CHAO)
-    {
-        y=((ycima+1)*32);
-        ima->angulo=360-ima->angulo;
-    }
-    else if(mapa[ybaixo][xmeio] != JOGO_CHAO)
-    {
-        y=((ycima)*32+32-TAM_IMA);
-        ima->angulo=360-ima->angulo;
-    }
-    // Está batendo à esquerda
-    if(mapa[ymeio][xesq] != JOGO_CHAO)
-    {
-        x=(xesq+1)*32;
-        ima->angulo=180-ima->angulo;
-    }
-    else if(mapa[ymeio][xdir] != JOGO_CHAO)
-    {
-        x=((xesq)*32+32-TAM_IMA);
-        ima->angulo=180-ima->angulo;
-    }
-    if(ima->angulo<0)
-        ima->angulo+=360;
-    else
-        ima->angulo= (int)ima->angulo%360;
-    // Simula o atrito
-    if(ima->velocidade>0)
-    {
-        ima->velocidade-=0.1;
-        if(ima->velocidade<0)
-            ima->velocidade=0;
-    }
-
-    // Atualiza a posição do ímã
-    ima->x = x;
-    ima->y=y;
-}
-
-void Game::atualizaEstrela(Mapa mapa, Personagem *estrela)
-{
-    // Se está morrendo, simplesmente decrementa o contador de morte e volta
-    if(estrela->tipo == JOGO_ESTRELA_MORRENDO)
-    {
-        estrela->timer-=2;
-        if(estrela->timer <= 0)
-            estrela->tipo = JOGO_MORTO;
-        return;
-    }
-
-    // Atualiza a rotação
-    estrela->anguloRotacao=(estrela->anguloRotacao+2)%360;
-
-
-    // Futura posição da estrela na tela
-    float x=estrela->x+estrela->velocidade*cos(estrela->angulo*PI/180);
-    float y=estrela->y+estrela->velocidade*sin(estrela->angulo*PI/180);
-
-    // Verifica se o jogador está entrando dentro de um bloco
-    int xesq = (int)x/32;
-    int xdir = ((int)x+TAM_ESTRELA)/32;
-    int ycima = (int)y/32;
-    int ybaixo = ((int)y + TAM_ESTRELA)/32;
-    int xmeio = ((int)x + TAM_ESTRELA/2)/32;
-    int ymeio = ((int)y + TAM_ESTRELA/2)/32;
-
-    bool bateu=false;
-    // Está batendo em cima?
-    if(mapa[ycima][xmeio] != JOGO_CHAO)
-    {
-        y=((ycima+1)*32);
-        estrela->angulo=360-estrela->angulo;
-    }
-    else if(mapa[ybaixo][xmeio] != JOGO_CHAO)
-    {
-        y=((ycima)*32);
-        estrela->angulo=360-estrela->angulo;
-    }
-    // Está batendo à esquerda
-    if(mapa[ymeio][xesq] != JOGO_CHAO)
-    {
-        x=(xesq+1)*32;
-        estrela->angulo=180-estrela->angulo;
-    }
-    else if(mapa[ymeio][xdir] != JOGO_CHAO)
-    {
-        x=((xesq)*32);
-        estrela->angulo=180-estrela->angulo;
-    }
-    if(estrela->angulo<0)
-        estrela->angulo+=360;
-    else
-        estrela->angulo= (int)estrela->angulo%360;
-
-    // Atualiza a posição do ímã
-    estrela->x = x;
-    estrela->y=y;
-
-}
-
-int Game::colisoesImasEstrelas(Personagem imas[], Personagem estrelas[])
-{
-    int placar=0;
-    for(int i=0;i<MAX_IMAS;i++)
-    {
-        // O ímã só mata se está se movendo
-        if(imas[i].velocidade==0)
-            continue;
-        for(int j=0;j<MAX_ESTRELAS;j++)
-        {
-            if(estrelas[j].tipo == JOGO_MORTO || estrelas[j].tipo==JOGO_ESTRELA_MORRENDO)
-                continue;
-            float xcentroe = estrelas[j].x + (TAM_ESTRELA/2);
-            float ycentroe = estrelas[j].y + (TAM_ESTRELA/2);
-            float xcentroi = imas[i].x + TAM_IMA/2;
-            float ycentroi = imas[i].y + TAM_IMA/2;
-            float distancia = sqrt((xcentroe-xcentroi)*(xcentroe-xcentroi)+ (ycentroe-ycentroi)*(ycentroe-ycentroi));
-            if(distancia< TAM_ESTRELA/2 + TAM_IMA/2)
-            {
-                estrelas[j].tipo=JOGO_ESTRELA_MORRENDO;
-                estrelas[j].timer=255;
-                placar+=1;
-                CA_TocaEfeito(efeitoInimigo, xcentroe);
-            }
-        }
-    }
-    return placar;
-}
-
-bool Game::colisaoJogadorEstrelas(Jogador *jogador, Personagem estrelas[])
-{
-    if(!jogador->vivo)
-        return false;
-    for(int j=0;j<MAX_ESTRELAS;j++)
-    {
-        if(estrelas[j].tipo == JOGO_MORTO || estrelas[j].tipo==JOGO_ESTRELA_MORRENDO)
-            continue;
-        float xcentroe = estrelas[j].x + (TAM_ESTRELA/2);
-        float ycentroe = estrelas[j].y + (TAM_ESTRELA/2);
-        float xcentroj = jogador->x + TAM_JOGADOR/2;
-        float ycentroj = jogador->y + TAM_JOGADOR/2;
-        float distancia = sqrt((xcentroe-xcentroj)*(xcentroe-xcentroj)+ (ycentroe-ycentroj)*(ycentroe-ycentroj));
-        if(distancia< TAM_ESTRELA/2 + TAM_JOGADOR/2)
-        {
-            CA_TocaEfeito(efeitoJogador, xcentroj);
-            return true;
-        }
-    }
-    return false;
 }
 
 float Game::calculaAngulo(const float dx, const float dy)
