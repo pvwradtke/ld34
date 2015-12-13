@@ -41,7 +41,7 @@ private:
     const C2D_Botao *teclado;
     const C2D_Gamepad *gamepads;
     const C2D_Mouse *mouse;
-    int     fonteSistema;
+    int     fonteSistema, fonteTitulo, fonteMensagem;
     int     fonteURL;
     int     highScore;
     char    listaFases[MAX_FASES][MAX_TEXTO];

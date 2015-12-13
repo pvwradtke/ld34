@@ -19,6 +19,8 @@ class Fase
         bool procuraPrimeiraMarca(const int marca, int *x, int *y);
         bool colideCenario(int *xatual, int *yatual, const int xanterior, const int yanterior, const int largura, const int altura);
         bool colideMarca(const int marca, const int x, const int y, const int largura, const int altura);
+        bool ativaTrigger(int triggerNumber);
+        const char *pegaMensagemTrigger(int triggerNumber);
     protected:
         bool init;
         char    title[MAX_TEXTO];

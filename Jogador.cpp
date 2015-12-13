@@ -42,8 +42,10 @@ bool Jogador::inicializa(Fase &mapa)
     return true;
 }
 
-int Jogador::atualiza(Fase &mapa)
+int Jogador::atualiza(Fase &mapa, int angulo)
 {
+    if(estado == JOGADOR_VITORIA || estado == JOGADOR_MORTO)
+        return estado;
     rotacao+=dirRotacao/600.0;
     // Calcula o deslocamento horizontal, baseado na direção do jogador
     double dx, dy;
@@ -59,29 +61,54 @@ int Jogador::atualiza(Fase &mapa)
     int yatual = (int)y;
     if(mapa.colideCenario(&xatual, &yatual, xanterior, yanterior, 32, 32)){
         direcao=(direcao+180)%360;
+        dirRotacao*=-1;
         if((int)x != xatual)
             x=xatual;
         if((int)y != yatual)
             y=yatual;
     }
     // Aplica a gravidade (é mais fácil aqui, para separar da colisão com o movimento normal)
-    /*tqueda++;
+    tqueda++;
     double tempo=(float)tqueda/100.0;
     double aceleracao=20*tempo*tempo;
-    int dgravidade = direcao-90;
+    int dgravidade = angulo-90;
     if(dgravidade<0)
         dgravidade+=360;
     if(aceleracao>400)
         aceleracao=400;
     dx = (aceleracao*cosseno(dgravidade))/600.0;
     dy = (aceleracao*seno(dgravidade))/600.0;
+    xanterior=(int)x;
+    yanterior=(int)y;
     x+=dx;
-    y-=dy;*/
-    return 0;
+    y-=dy;
+    xatual = (int)x;
+    yatual = (int)y;
+    if(mapa.colideCenario(&xatual, &yatual, xanterior, yanterior, 32, 32)){
+        if(aceleracao>300)
+            this->estado=JOGADOR_MORTO;
+        tqueda=0;
+        if((int)x != xatual)
+            x=xatual;
+        if((int)y != yatual)
+            y=yatual;
+    }
+    // Achou uma armadilha?
+    if(estado==JOGADOR_NORMAL && mapa.colideMarca(JOGO_MORTE, x, y, 32, 32))
+        estado=JOGADOR_MORTO;
+    // Achou o fim da fase?
+    if(estado==JOGADOR_NORMAL && aceleracao<30 && mapa.colideMarca(JOGO_FIM, x+14, y+14, 4, 4))
+        estado=JOGADOR_VITORIA;
+    return estado;
 }
 
 void Jogador::desenha(const int xref, const int yref, const int angulo)
 {
+    int cor=this->cor;
+    if(estado == JOGADOR_MORTO)
+        cor+=8;
+    else if(estado == JOGADOR_VITORIA)
+        cor+=4;
     switch(angulo)
     {
     case 0:
@@ -99,12 +126,19 @@ void Jogador::desenha(const int xref, const int yref, const int angulo)
     }
 }
 
-void Jogador::rotaciona(const int angulo)
+void Jogador::rotaciona(const int difangulo)
 {
-    direcao=angulo;
-    rotacao+=angulo;
+    direcao+=difangulo;
+    if(direcao>=360)
+        direcao-=360;
+    else if(direcao<0)
+        direcao+=360;
+    rotacao+=difangulo;
     if(rotacao>=360)
         rotacao-=360;
+    else if(rotacao<0)
+        rotacao+=360;
+
 }
 
 int Jogador::seno(int angulo)
@@ -130,4 +164,17 @@ int Jogador::cosseno(int angulo)
     else
         return 0;
 
+}
+
+void Jogador::pegaBoundingBox(int *x, int *y, int *largura, int *altura)
+{
+    *x=this->x;
+    *y=this->y;
+    *largura=32;
+    *altura=32;
+}
+
+int Jogador::pegaEstado()
+{
+    return estado;
 }

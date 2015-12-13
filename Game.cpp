@@ -32,6 +32,8 @@ bool Game::init(bool fullscreen){
     if(status)
     {
         fonteSistema = C2D_CarregaFonte("gfx/TerminusBold.ttf", "sistema", 24);
+        fonteTitulo = C2D_CarregaFonte("gfx/ASS.TTF", "titulo", 250);
+        fonteMensagem = C2D_CarregaFonte("gfx/Domdiagb.ttf", "titulo", 80);
         fonteURL = C2D_CarregaFonte("gfx/TerminusBold.ttf", "URL", 60);
         teclado = C2D_PegaTeclas();
         gamepads = C2D_PegaGamepads();
@@ -183,6 +185,7 @@ int Game::mainmenuscreen(){
     //CA_TocaMusica(musica, 1);
     while(!end){
         C2D_LimpaTela();
+        C2D_DesenhaTexto(fonteTitulo, 960, 250, "Gravity Flip", C2D_TEXTO_CENTRALIZADO, 32, 128, 255, 255);
         C2D_DesenhaTexto(fonteSistema, 960, 600, "Press a Gamepad shoulder button to play with the gamepad", C2D_TEXTO_CENTRALIZADO, 255, 255, 255, 255);
         C2D_DesenhaTexto(fonteSistema, 960, 640, "Press Space to play with Keyboard", C2D_TEXTO_CENTRALIZADO, 255, 255, 255, 255);
         C2D_DesenhaTexto(fonteSistema, 960, 800, "Press ESC to quit", C2D_TEXTO_CENTRALIZADO, 255, 255, 255, 255);
@@ -203,7 +206,7 @@ int Game::mainmenuscreen(){
             end=true;
             choice = Game::game_keyplusmouse;
         }
-        else if(gamepads[0].botoes[C2D_GBOTAO_LS].pressionou || gamepads[0].botoes[C2D_GBOTAO_RS].pressionou)
+        else if(gamepads[0].botoes[C2D_GBOTAO_L].pressionou || gamepads[0].botoes[C2D_GBOTAO_R].pressionou)
         {
             end = true;
             choice = Game::game_gamepad;
@@ -262,6 +265,7 @@ bool Game::gamescreen(Jogador &jogador, int numFase, char *arquivoFase)
     }
     fase.imprime();
     jogador.inicializa(fase);
+    unsigned int faixa = C2D_CarregaSpriteSet("./gfx/faixa.png", 0, 0);
 
 /*    if(!carregaFase(arquivoFase, mensagem, mapa, arquivoMusica))
     {
@@ -289,6 +293,11 @@ bool Game::gamescreen(Jogador &jogador, int numFase, char *arquivoFase)
     // usa essa variável para controlar a lógica rodando 10x mais rápido que o desenho e as entradas
     int contador=-1;
     bool roda=false;
+    int contaTrigger=0;
+    int trigger=0;
+    int contaVitoria=0;
+    int contaGameOver=0;
+    int estado = Jogador::JOGADOR_NORMAL;
     while(!fim && !sai)
     {
         contador=(contador+1)%10;
@@ -297,22 +306,54 @@ bool Game::gamescreen(Jogador &jogador, int numFase, char *arquivoFase)
         else
             roda=false;
         // roda a lógica a 60fps
-        if(roda){
+        if(roda && estado==Jogador::JOGADOR_NORMAL){
             if(teclado[C2D_TDIREITA].pressionou || teclado[C2D_TD].pressionou || gamepads[0].botoes[C2D_GBOTAO_R].pressionou){
                 angulo=(angulo+90)%360;
-                jogador.rotaciona(angulo);
+                jogador.rotaciona(90);
             }
             else if(teclado[C2D_TESQUERDA].pressionou || teclado[C2D_TA].pressionou || gamepads[0].botoes[C2D_GBOTAO_L].pressionou){
                 angulo=(angulo-90);
                 if(angulo<0)
                     angulo=270;
-                jogador.rotaciona(angulo);
+                jogador.rotaciona(-90);
             }
             if(teclado[C2D_TF12].pressionou)
                 debug=!debug;
+            // testa se pegou um dos triggers
+            int x, y, largura, altura;
+            jogador.pegaBoundingBox(&x, &y, &largura, &altura);
+            for(int i=JOGO_TRIGGER_0;i<=JOGO_TRIGGER_4;i++)
+                if(fase.colideMarca(i, x, y, largura, altura))
+                    if(fase.ativaTrigger(i-JOGO_TRIGGER_0)){
+                        contaTrigger=120;
+                        trigger=i-JOGO_TRIGGER_0;
+                        break;
+                    }
+        }
+        if(roda){
+            if(estado==Jogador::JOGADOR_MORTO && contaGameOver>0){
+                if(--contaGameOver==0)
+                    fim=true;
+            }
+            if(estado==Jogador::JOGADOR_VITORIA && contaVitoria>0){
+                if(--contaVitoria==0)
+                    fim=true;
+            }
+            if(contaTrigger>0)
+                contaTrigger--;
+            if(teclado[C2D_TESC].pressionou)
+                sai=true;
         }
         // roda a lógica a 600fps
-        jogador.atualiza(fase);
+        estado = jogador.atualiza(fase, angulo);
+        // Verifica se ganhou
+        if(contaGameOver==0 && estado==Jogador::JOGADOR_MORTO)
+            contaGameOver=180;
+        if(contaVitoria==0 && estado==Jogador::JOGADOR_VITORIA)
+            contaVitoria=180;
+
+
+
         // Atualizaa tela a 60fps
         if(roda){
             // Desenha a tela
@@ -321,9 +362,19 @@ bool Game::gamescreen(Jogador &jogador, int numFase, char *arquivoFase)
             int y_desl=(1080-32*32)/2;
             fase.desenha(x_desl, y_desl, angulo, debug);
             jogador.desenha(x_desl, y_desl, angulo);
+            if(contaVitoria>0){
+                C2D_DesenhaSprite(faixa, 0, 0, 300);
+                C2D_DesenhaTexto(fonteMensagem, 960, 310, "You made it!", C2D_TEXTO_CENTRALIZADO, 255, 255, 255, 255);
+            }else if(contaGameOver>0){
+                C2D_DesenhaSprite(faixa, 0, 0, 300);
+                C2D_DesenhaTexto(fonteMensagem, 960, 310, "Better luck the next time ...", C2D_TEXTO_CENTRALIZADO, 255, 255, 255, 255);
+            }else if(contaTrigger>0){
+                C2D_DesenhaSprite(faixa, 0, 0, 300);
+                C2D_DesenhaTexto(fonteMensagem, 960, 310, fase.pegaMensagemTrigger(trigger), C2D_TEXTO_CENTRALIZADO, 255, 255, 255, 255);
+            }
+
+
             C2D_Sincroniza(C2D_FPS_PADRAO);
-            if(teclado[C2D_TESC].pressionou)
-                fim=true;
         }
     }
     CA_FadeMusica(0);

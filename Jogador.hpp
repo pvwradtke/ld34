@@ -24,9 +24,11 @@ class Jogador
         Jogador();
         virtual ~Jogador();
         bool inicializa(Fase &mapa);
-        int atualiza(Fase &fase);
+        int atualiza(Fase &fase, const int angulo);
         void desenha(const int xref, const int yref, const int angulo);
         void rotaciona(const int angulo);
+        void pegaBoundingBox(int *x, int *y, int *largura, int *altura);
+        int pegaEstado();
     protected:
         int seno(int angulo);
         int cosseno(int angulo);

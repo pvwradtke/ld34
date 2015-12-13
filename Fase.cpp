@@ -205,15 +205,15 @@ bool Fase::colideCenario(int *xatual, int *yatual, const int xanterior, const in
         // Testa se está indo para a direita e se bate
         int byt=*yatual/32;
         int byb=(*yatual+altura-1)/32;
-        int bx=(*xatual+largura)/32;
+        int bx=(*xatual+largura-1)/32;
         if(mapa[byt][bx]==JOGO_SOLIDO || mapa[byb][bx]==JOGO_SOLIDO){
-            *xatual=(bx-1)*32-1;
+            *xatual=(bx-1)*32;
             colidiu=true;
         }
     }else if(*xatual < xanterior){
         // Testa se está indo pra esquerda e se bateu
         int byt=*yatual/32;
-        int byb=(*yatual+altura)/32;
+        int byb=(*yatual+altura-1)/32;
         int bx=*xatual/32;
         if(mapa[byt][bx]==JOGO_SOLIDO || mapa[byb][bx]==JOGO_SOLIDO){
             *xatual=(bx+1)*32;
@@ -221,18 +221,52 @@ bool Fase::colideCenario(int *xatual, int *yatual, const int xanterior, const in
         }
     }
 
+    if(*yatual>yanterior){
+        // Testa se está indo para a baixo e se bate
+        int by=(*yatual+altura-1)/32;
+        int bxe=*xatual/32;
+        int bxd=(*xatual+largura-1)/32;
+        if(mapa[by][bxe]==JOGO_SOLIDO || mapa[by][bxd]==JOGO_SOLIDO){
+            *yatual=by*32-altura;
+            colidiu=true;
+        }
+    }else if(*yatual < yanterior){
+        // Testa se está indo pra esquerda e se bateu
+        int by=*yatual/32;
+        int bxe=*xatual/32;
+        int bxd=(*xatual+largura-1)/32;
+        if(mapa[by][bxe]==JOGO_SOLIDO || mapa[by][bxd]==JOGO_SOLIDO){
+            *yatual=(by+1)*32;
+            colidiu=true;
+        }
+    }
+
+
     return colidiu;
 }
 
 bool Fase::colideMarca(const int marca, const int x, const int y, const int largura, const int altura)
 {
-    if(geometria[x/32][y/32]==marca)
+    if(geometria[y/32][x/32]==marca)
         return true;
-    else if(geometria[(x+largura)/32][y/32]==marca)
+    else if(geometria[y/32][(x+largura-1)/32]==marca)
         return true;
-    else if(geometria[(x+largura)/32][(y+altura)/32]==marca)
+    else if(geometria[(y+altura-1)/32][(x+largura-1)/32]==marca)
         return true;
-    else if(geometria[x/32][(y+altura)/32]==marca)
+    else if(geometria[(y+altura-1)/32][x/32]==marca)
         return true;
     return false;
+}
+
+bool Fase::ativaTrigger(int triggerNumber)
+{
+    if(trigger_activated[triggerNumber])
+        return false;
+    trigger_activated[triggerNumber]=true;
+    return true;
+}
+
+const char* Fase::pegaMensagemTrigger(int triggerNumber)
+{
+    return trigger_messages[triggerNumber];
 }
