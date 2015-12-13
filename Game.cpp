@@ -53,6 +53,7 @@ bool Game::run(){
     int currentstate = Game::splash;
     int exit=false;
     std::string levelname="./resources/tutorial.dat";
+
     while(!exit){
         switch(currentstate)
         {
@@ -71,9 +72,7 @@ bool Game::run(){
             case Game::game_gamepad:
             case Game::game_keyplusmouse:{
                 int numFases;
-                Jogador jogador=Jogador();
-                bool resultado = gamescreen(jogador, 1, "./levels/testlevel.dat");
-/*                if(!carregaListaFases("maps/level_list.dat", &numFases, listaFases))
+                if(!carregaListaFases("./levels/levels_list.dat", &numFases, listaFases))
                 {
                     printf("Erro ao carregar as fases!\n");
                     currentstate = Game::mainmenu;
@@ -81,25 +80,19 @@ bool Game::run(){
                 else
                 {
                     srand(time(NULL));
-                    Jogador jogador;
-                    jogador.vivo=true;
-                    int placarFinal=0;
-                    int placar;
-                    int previousHighScore = highScore;
+                    Jogador jogador=Jogador();
+                    int mortes=0;
                     int faseAtual=0;
                     bool resultado=false;
                     while(faseAtual<numFases)
                     {
-                        placar=placarFinal;
-                        resultado = gamescreen(&jogador, currentstate, faseAtual, &placar, listaFases[faseAtual]);
+                        resultado = gamescreen(jogador, faseAtual,listaFases[faseAtual]);
                         if(resultado)
                         {
-                            if(jogador.vivo)
-                            {
+                            if(jogador.pegaEstado()==Jogador::JOGADOR_VITORIA)
                                 faseAtual++;
-                                placarFinal+=placar;
-                            }
-
+                            else
+                                mortes++;
                         }
                         else
                         {
@@ -107,13 +100,11 @@ bool Game::run(){
                             break;
                         }
                     }
-                    if(highScore > previousHighScore)
-                        savehighscore();
                     if(resultado)
                         currentstate = Game::credits;
                     else
                         currentstate = Game::mainmenu;
-                }*/
+                }
                 currentstate = Game::mainmenu;
                 break;
             }
@@ -186,9 +177,9 @@ int Game::mainmenuscreen(){
     while(!end){
         C2D_LimpaTela();
         C2D_DesenhaTexto(fonteTitulo, 960, 250, "Gravity Flip", C2D_TEXTO_CENTRALIZADO, 32, 128, 255, 255);
-        C2D_DesenhaTexto(fonteSistema, 960, 600, "Press a Gamepad shoulder button to play with the gamepad", C2D_TEXTO_CENTRALIZADO, 255, 255, 255, 255);
-        C2D_DesenhaTexto(fonteSistema, 960, 640, "Press Space to play with Keyboard", C2D_TEXTO_CENTRALIZADO, 255, 255, 255, 255);
-        C2D_DesenhaTexto(fonteSistema, 960, 800, "Press ESC to quit", C2D_TEXTO_CENTRALIZADO, 255, 255, 255, 255);
+        C2D_DesenhaTexto(fonteSistema, 960, 600, "Right button: right gamepad shoulder button, D key or Right Key. ", C2D_TEXTO_CENTRALIZADO, 255, 255, 255, 255);
+        C2D_DesenhaTexto(fonteSistema, 960, 640, "Left: left gamepad shoulder button, A key or Left key.", C2D_TEXTO_CENTRALIZADO, 255, 255, 255, 255);
+        C2D_DesenhaTexto(fonteSistema, 960, 800, "Press a control button to play, or ESC to quit anytime.", C2D_TEXTO_CENTRALIZADO, 255, 255, 255, 255);
         C2D_DesenhaTexto(fonteSistema, 960, 900, "(c) 2015 Paulo V W Radtke - follow me at @pvwradtke or http://chienloco.com/wp/", C2D_TEXTO_CENTRALIZADO, 255, 255, 255, 255);
         C2D_Sincroniza(C2D_FPS_PADRAO);
         if(teclado[C2D_TESC].pressionou)
@@ -201,7 +192,7 @@ int Game::mainmenuscreen(){
             end = true;
             choice = Game::credits;
         }
-        else if(teclado[C2D_TESPACO].pressionou)
+        else if(teclado[C2D_TESPACO].pressionou || teclado[C2D_TA].pressionou || teclado[C2D_TD].pressionou || teclado[C2D_TDIREITA].pressionou || teclado[C2D_TESQUERDA].pressionou)
         {
             end=true;
             choice = Game::game_keyplusmouse;

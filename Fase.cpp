@@ -15,6 +15,8 @@ Fase::~Fase()
 bool Fase::carrega(const char *nomeArquivo)
 {
     FILE *arquivo = fopen(nomeArquivo, "r");
+    if(!arquivo)
+        return false;
     bool ltitle=false, ltriggers=false, lmapa=false, lgeometria=false, lmarker=false, ltile=false;
     char tipo[MAX_TEXTO];
     while(!feof(arquivo) && (!ltitle || !ltriggers || !lmapa || !lgeometria || !lmarker || !ltile))
@@ -124,14 +126,14 @@ void Fase::imprime()
     for(int i=0;i<altura;i++)
     {
         for(int j=0;j<largura;j++)
-            printf("%d\t", mapa[i][j]);
+            printf("%d ", mapa[i][j]);
         printf("\n");
     }
     printf("Geometria:\n");
     for(int i=0;i<altura;i++)
     {
         for(int j=0;j<largura;j++)
-            printf("%d\t", geometria[i][j]);
+            printf("%d ", geometria[i][j]);
         printf("\n");
     }
     printf("Marca: %d\n", marca);

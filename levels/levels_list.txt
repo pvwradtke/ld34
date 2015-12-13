@@ -1,5 +1,0 @@
-01-tutorial.tmx
-02-tutorial.tmx
-03-tutorial.tmx
-04-tutorial.tmx
-05-level01.tmx

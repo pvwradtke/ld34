@@ -3,6 +3,7 @@
 #include <c2d3/chien2d.h>
 
 unsigned int Jogador::sprite=0;
+
 Jogador::Jogador()
 {
     //ctor
@@ -85,8 +86,10 @@ int Jogador::atualiza(Fase &mapa, int angulo)
     xatual = (int)x;
     yatual = (int)y;
     if(mapa.colideCenario(&xatual, &yatual, xanterior, yanterior, 32, 32)){
-        if(aceleracao>300)
+        if(aceleracao>320){
             this->estado=JOGADOR_MORTO;
+            printf("Aceleracao: %f\n", aceleracao);
+        }
         tqueda=0;
         if((int)x != xatual)
             x=xatual;
