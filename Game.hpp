@@ -10,9 +10,11 @@
 
 #include <memory>
 #include <string>
+#include <stdio.h>      /* printf, NULL */
+#include <stdlib.h>     /* srand, rand */
+#include <time.h>       /* time */
 #include <c2d3/chien2d.h>
 #include <c2d3/chienaudio.h>
-#include "Game.hpp"
 
 #include "headers.h"
 #include "Jogador.hpp"
