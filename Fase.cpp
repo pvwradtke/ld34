@@ -33,7 +33,7 @@ bool Fase::carrega(const char *nomeArquivo)
             ltitle=true;
         }
         // Processa o tipo do dado
-        if(strcmp(tipo, "tileset")==0 && !tileset){
+        if(strcmp(tipo, "tileset")==0 && !ltile){
             if(fscanf(arquivo, "%*[ \n\t]%[^\t\n]", tipo)==0){
                 fclose(arquivo);
                 return(false);
@@ -99,6 +99,7 @@ bool Fase::carrega(const char *nomeArquivo)
             lgeometria=true;
         }
     }
+    fclose(arquivo);
     // Verifica que leu tudo
     if(!ltitle || !ltriggers || !lmapa || !lgeometria || !lmarker || !ltile)
         return false;
@@ -195,4 +196,43 @@ bool Fase::procuraPrimeiraMarca(const int marca, int *x, int *y)
     if(!achou)
         return false;
     return true;
+}
+
+bool Fase::colideCenario(int *xatual, int *yatual, const int xanterior, const int yanterior, const int largura, const int altura)
+{
+    bool colidiu=false;
+    if(*xatual>xanterior){
+        // Testa se está indo para a direita e se bate
+        int byt=*yatual/32;
+        int byb=(*yatual+altura-1)/32;
+        int bx=(*xatual+largura)/32;
+        if(mapa[byt][bx]==JOGO_SOLIDO || mapa[byb][bx]==JOGO_SOLIDO){
+            *xatual=(bx-1)*32-1;
+            colidiu=true;
+        }
+    }else if(*xatual < xanterior){
+        // Testa se está indo pra esquerda e se bateu
+        int byt=*yatual/32;
+        int byb=(*yatual+altura)/32;
+        int bx=*xatual/32;
+        if(mapa[byt][bx]==JOGO_SOLIDO || mapa[byb][bx]==JOGO_SOLIDO){
+            *xatual=(bx+1)*32;
+            colidiu=true;
+        }
+    }
+
+    return colidiu;
+}
+
+bool Fase::colideMarca(const int marca, const int x, const int y, const int largura, const int altura)
+{
+    if(geometria[x/32][y/32]==marca)
+        return true;
+    else if(geometria[(x+largura)/32][y/32]==marca)
+        return true;
+    else if(geometria[(x+largura)/32][(y+altura)/32]==marca)
+        return true;
+    else if(geometria[x/32][(y+altura)/32]==marca)
+        return true;
+    return false;
 }

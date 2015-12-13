@@ -286,27 +286,45 @@ bool Game::gamescreen(Jogador &jogador, int numFase, char *arquivoFase)
     C2D_TrocaCorLimpezaTela(0,0,0);
     bool fim=false;
     bool sai=false;
+    // usa essa variável para controlar a lógica rodando 10x mais rápido que o desenho e as entradas
+    int contador=-1;
+    bool roda=false;
     while(!fim && !sai)
     {
-        // roda a lógica
-        if(teclado[C2D_TDIREITA].pressionou || teclado[C2D_TD].pressionou || gamepads[0].botoes[C2D_GBOTAO_R].pressionou)
-            angulo=(angulo+90)%360;
-        else if(teclado[C2D_TESQUERDA].pressionou || teclado[C2D_TA].pressionou || gamepads[0].botoes[C2D_GBOTAO_L].pressionou){
-            angulo=(angulo-90);
-            if(angulo<0)
-                angulo=270;
+        contador=(contador+1)%10;
+        if(contador==0)
+            roda=true;
+        else
+            roda=false;
+        // roda a lógica a 60fps
+        if(roda){
+            if(teclado[C2D_TDIREITA].pressionou || teclado[C2D_TD].pressionou || gamepads[0].botoes[C2D_GBOTAO_R].pressionou){
+                angulo=(angulo+90)%360;
+                jogador.rotaciona(angulo);
+            }
+            else if(teclado[C2D_TESQUERDA].pressionou || teclado[C2D_TA].pressionou || gamepads[0].botoes[C2D_GBOTAO_L].pressionou){
+                angulo=(angulo-90);
+                if(angulo<0)
+                    angulo=270;
+                jogador.rotaciona(angulo);
+            }
+            if(teclado[C2D_TF12].pressionou)
+                debug=!debug;
         }
-        if(teclado[C2D_TF12].pressionou)
-            debug=!debug;
-        // Desenha a tela
-        C2D_LimpaTela();
-        int x_desl=(1920-32*32)/2;
-        int y_desl=(1080-32*32)/2;
-        fase.desenha(x_desl, y_desl, angulo, debug);
-        jogador.desenha(x_desl, y_desl, angulo);
-        C2D_Sincroniza(C2D_FPS_PADRAO);
-        if(teclado[C2D_TESC].pressionou)
-            fim=true;
+        // roda a lógica a 600fps
+        jogador.atualiza(fase);
+        // Atualizaa tela a 60fps
+        if(roda){
+            // Desenha a tela
+            C2D_LimpaTela();
+            int x_desl=(1920-32*32)/2;
+            int y_desl=(1080-32*32)/2;
+            fase.desenha(x_desl, y_desl, angulo, debug);
+            jogador.desenha(x_desl, y_desl, angulo);
+            C2D_Sincroniza(C2D_FPS_PADRAO);
+            if(teclado[C2D_TESC].pressionou)
+                fim=true;
+        }
     }
     CA_FadeMusica(0);
     C2D_RemoveSpriteSet(tileset);

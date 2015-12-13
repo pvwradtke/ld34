@@ -5,7 +5,7 @@
 #include "Fase.h"
 
 #define     DIM_JOGADOR     32
-#define     VJOGADOR        1.0
+#define     VJOGADOR        64.0
 
 class Jogador
 {
@@ -16,7 +16,7 @@ class Jogador
         float y;
         int estado;
         int direcao;
-        double vqueda;
+        int tqueda;
         double rotacao;
         double dirRotacao;
     public:
@@ -28,6 +28,8 @@ class Jogador
         void desenha(const int xref, const int yref, const int angulo);
         void rotaciona(const int angulo);
     protected:
+        int seno(int angulo);
+        int cosseno(int angulo);
     private:
 };
 

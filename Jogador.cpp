@@ -3,7 +3,6 @@
 #include <c2d3/chien2d.h>
 
 unsigned int Jogador::sprite=0;
-
 Jogador::Jogador()
 {
     //ctor
@@ -14,7 +13,7 @@ Jogador::Jogador()
     y = 0;
     estado=JOGADOR_NORMAL;
     direcao = 0;
-    vqueda=0;
+    tqueda=0;
     rotacao=0;
     dirRotacao = 2;
     cor = (random())%4;
@@ -37,9 +36,9 @@ bool Jogador::inicializa(Fase &mapa)
     y=ylocal;
     estado=JOGADOR_NORMAL;
     direcao = 0;
-    vqueda=0;
+    tqueda=0;
     rotacao=0;
-    dirRotacao = 2;
+    dirRotacao = 90;
     return true;
 }
 
@@ -48,8 +47,36 @@ int Jogador::atualiza(Fase &mapa)
     rotacao+=dirRotacao/600.0;
     // Calcula o deslocamento horizontal, baseado na direção do jogador
     double dx, dy;
-    dx = (VJOGADOR*cos(PI*direcao))/600.0;
-    dy = (VJOGADOR*sin(PI*direcao))/600.0;
+    dx = (VJOGADOR*cosseno(direcao))/600.0;
+    dy = (VJOGADOR*seno(direcao))/600.0;
+
+    // Ajusta colisao com o cenário
+    int xanterior=(int)x;
+    int yanterior=(int)y;
+    x+=dx;
+    y-=dy;
+    int xatual = (int)x;
+    int yatual = (int)y;
+    if(mapa.colideCenario(&xatual, &yatual, xanterior, yanterior, 32, 32)){
+        direcao=(direcao+180)%360;
+        if((int)x != xatual)
+            x=xatual;
+        if((int)y != yatual)
+            y=yatual;
+    }
+    // Aplica a gravidade (é mais fácil aqui, para separar da colisão com o movimento normal)
+    /*tqueda++;
+    double tempo=(float)tqueda/100.0;
+    double aceleracao=20*tempo*tempo;
+    int dgravidade = direcao-90;
+    if(dgravidade<0)
+        dgravidade+=360;
+    if(aceleracao>400)
+        aceleracao=400;
+    dx = (aceleracao*cosseno(dgravidade))/600.0;
+    dy = (aceleracao*seno(dgravidade))/600.0;
+    x+=dx;
+    y-=dy;*/
     return 0;
 }
 
@@ -78,4 +105,29 @@ void Jogador::rotaciona(const int angulo)
     rotacao+=angulo;
     if(rotacao>=360)
         rotacao-=360;
+}
+
+int Jogador::seno(int angulo)
+{
+    if(angulo == 0)
+        return 0;
+    else if(angulo == 90)
+        return 1;
+    else if(angulo == 180)
+        return 0;
+    else
+        return -1;
+}
+
+int Jogador::cosseno(int angulo)
+{
+    if(angulo == 0)
+        return 1;
+    else if(angulo == 90)
+        return 0;
+    else if(angulo == 180)
+        return -1;
+    else
+        return 0;
+
 }
