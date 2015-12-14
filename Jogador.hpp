@@ -3,9 +3,10 @@
 
 #include "headers.h"
 #include "Fase.h"
+#include <stdio.h>
 
 #define     DIM_JOGADOR     32
-#define     VJOGADOR        64.0
+#define     VJOGADOR        80.0
 
 class Jogador
 {

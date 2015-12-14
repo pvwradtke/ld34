@@ -2,6 +2,7 @@
 #define FASE_HPP
 
 #include <c2d3/chien2d.h>
+#include <stdio.h>
 #include "headers.h"
 
 #define     MAX_TRIGGERS    5

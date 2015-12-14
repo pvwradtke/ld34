@@ -20,7 +20,7 @@
 1429326915 /home/paulo/repositories/chien2d/include/c2d3/chienaudio.h
 	<SDL2/SDL_mixer.h>
 
-1449987685 source:/home/paulo/repositories/ld34/Game.cpp
+1450060582 source:/home/paulo/repositories/ld34/Game.cpp
 	"Game.hpp"
 	<sstream>
 	<iostream>
@@ -32,33 +32,35 @@
 	<stdio.h>
 	<math.h>
 
-1449979750 /home/paulo/repositories/ld34/Game.hpp
+1449991690 /home/paulo/repositories/ld34/Game.hpp
 	<memory>
 	<string>
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
 	<c2d3/chien2d.h>
 	<c2d3/chienaudio.h>
-	"Game.hpp"
 	"headers.h"
 	"Jogador.hpp"
 	"Fase.h"
 
-1449934211 source:/home/paulo/repositories/ld34/main.cpp
+1449991566 source:/home/paulo/repositories/ld34/main.cpp
 	<cstdlib>
 	<string.h>
 	"Game.hpp"
 
 1449955120 /home/paulo/repositories/ld34/headers.h
 
-1449989097 /home/paulo/repositories/ld34/Jogador.hpp
+1450024841 /home/paulo/repositories/ld34/Jogador.hpp
 	"headers.h"
 	"Fase.h"
 
-1449988306 source:/home/paulo/repositories/ld34/Jogador.cpp
+1450054046 source:/home/paulo/repositories/ld34/Jogador.cpp
 	"Jogador.hpp"
 	<cstdlib>
 	<c2d3/chien2d.h>
 
-1449987455 source:/home/paulo/repositories/ld34/Fase.cpp
+1450054235 source:/home/paulo/repositories/ld34/Fase.cpp
 	"Fase.h"
 
 1449981431 /home/paulo/repositories/ld34/Fase.h

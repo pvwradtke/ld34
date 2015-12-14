@@ -109,7 +109,7 @@ bool Fase::carrega(const char *nomeArquivo)
     for(int i=0;i<altura;i++)
         for(int j=0;j<largura;j++)
             if(geometria[i][j]!=0)
-                geometria[i][j]-=marca-1;
+                geometria[i][j]-=marca;
     init=true;
     return true;
 }
@@ -208,7 +208,7 @@ bool Fase::colideCenario(int *xatual, int *yatual, const int xanterior, const in
         int byt=*yatual/32;
         int byb=(*yatual+altura-1)/32;
         int bx=(*xatual+largura-1)/32;
-        if(mapa[byt][bx]==JOGO_SOLIDO || mapa[byb][bx]==JOGO_SOLIDO){
+        if(geometria[byt][bx]==JOGO_SOLIDO || geometria[byb][bx]==JOGO_SOLIDO){
             *xatual=(bx-1)*32;
             colidiu=true;
         }
@@ -217,7 +217,7 @@ bool Fase::colideCenario(int *xatual, int *yatual, const int xanterior, const in
         int byt=*yatual/32;
         int byb=(*yatual+altura-1)/32;
         int bx=*xatual/32;
-        if(mapa[byt][bx]==JOGO_SOLIDO || mapa[byb][bx]==JOGO_SOLIDO){
+        if(geometria[byt][bx]==JOGO_SOLIDO || geometria[byb][bx]==JOGO_SOLIDO){
             *xatual=(bx+1)*32;
             colidiu=true;
         }
@@ -228,7 +228,7 @@ bool Fase::colideCenario(int *xatual, int *yatual, const int xanterior, const in
         int by=(*yatual+altura-1)/32;
         int bxe=*xatual/32;
         int bxd=(*xatual+largura-1)/32;
-        if(mapa[by][bxe]==JOGO_SOLIDO || mapa[by][bxd]==JOGO_SOLIDO){
+        if(geometria[by][bxe]==JOGO_SOLIDO || geometria[by][bxd]==JOGO_SOLIDO){
             *yatual=by*32-altura;
             colidiu=true;
         }
@@ -237,7 +237,7 @@ bool Fase::colideCenario(int *xatual, int *yatual, const int xanterior, const in
         int by=*yatual/32;
         int bxe=*xatual/32;
         int bxd=(*xatual+largura-1)/32;
-        if(mapa[by][bxe]==JOGO_SOLIDO || mapa[by][bxd]==JOGO_SOLIDO){
+        if(geometria[by][bxe]==JOGO_SOLIDO || geometria[by][bxd]==JOGO_SOLIDO){
             *yatual=(by+1)*32;
             colidiu=true;
         }

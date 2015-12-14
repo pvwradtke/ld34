@@ -17,7 +17,7 @@ Jogador::Jogador()
     tqueda=0;
     rotacao=0;
     dirRotacao = 2;
-    cor = (random())%4;
+    cor = (rand())%4;
 }
 
 Jogador::~Jogador()
@@ -48,18 +48,22 @@ int Jogador::atualiza(Fase &mapa, int angulo)
     if(estado == JOGADOR_VITORIA || estado == JOGADOR_MORTO)
         return estado;
     rotacao+=dirRotacao/600.0;
-    // Calcula o deslocamento horizontal, baseado na direção do jogador
     double dx, dy;
+    int xanterior;
+    int yanterior;
+    int xatual;
+    int yatual;
+
+    // Calcula o deslocamento horizontal, baseado na direção do jogador
     dx = (VJOGADOR*cosseno(direcao))/600.0;
     dy = (VJOGADOR*seno(direcao))/600.0;
-
     // Ajusta colisao com o cenário
-    int xanterior=(int)x;
-    int yanterior=(int)y;
+    xanterior=(int)x;
+    yanterior=(int)y;
     x+=dx;
     y-=dy;
-    int xatual = (int)x;
-    int yatual = (int)y;
+    xatual = (int)x;
+    yatual = (int)y;
     if(mapa.colideCenario(&xatual, &yatual, xanterior, yanterior, 32, 32)){
         direcao=(direcao+180)%360;
         dirRotacao*=-1;
@@ -68,15 +72,26 @@ int Jogador::atualiza(Fase &mapa, int angulo)
         if((int)y != yatual)
             y=yatual;
     }
+
+    int dgravidade = angulo-90;
+    if(dgravidade<0)
+        dgravidade+=360;
+    // Desce um pixel na direção da gravidade para testar se cai numa armadilha
+    dx=cosseno(dgravidade);
+    dy=-seno(dgravidade);
+    xanterior=(int)x;
+    yanterior=(int)y;
+    xatual = (int)x+dx;
+    yatual = (int)y+dy;
+    if(!mapa.colideCenario(&xatual, &yatual, xanterior, yanterior, 32, 32))
+        if(estado==JOGADOR_NORMAL && mapa.colideMarca(JOGO_MORTE, xatual, yatual, 32, 32))
+            estado=JOGADOR_MORTO;
     // Aplica a gravidade (é mais fácil aqui, para separar da colisão com o movimento normal)
     tqueda++;
     double tempo=(float)tqueda/100.0;
     double aceleracao=20*tempo*tempo;
-    int dgravidade = angulo-90;
-    if(dgravidade<0)
-        dgravidade+=360;
-    if(aceleracao>400)
-        aceleracao=400;
+    if(aceleracao>500)
+        aceleracao=500;
     dx = (aceleracao*cosseno(dgravidade))/600.0;
     dy = (aceleracao*seno(dgravidade))/600.0;
     xanterior=(int)x;
@@ -86,7 +101,7 @@ int Jogador::atualiza(Fase &mapa, int angulo)
     xatual = (int)x;
     yatual = (int)y;
     if(mapa.colideCenario(&xatual, &yatual, xanterior, yanterior, 32, 32)){
-        if(aceleracao>320){
+        if(aceleracao>400){
             this->estado=JOGADOR_MORTO;
             printf("Aceleracao: %f\n", aceleracao);
         }
@@ -100,8 +115,10 @@ int Jogador::atualiza(Fase &mapa, int angulo)
     if(estado==JOGADOR_NORMAL && mapa.colideMarca(JOGO_MORTE, x, y, 32, 32))
         estado=JOGADOR_MORTO;
     // Achou o fim da fase?
-    if(estado==JOGADOR_NORMAL && aceleracao<30 && mapa.colideMarca(JOGO_FIM, x+14, y+14, 4, 4))
+    if(estado==JOGADOR_NORMAL && aceleracao<30 && mapa.colideMarca(JOGO_FIM, x+14, y+14, 4, 4)){
         estado=JOGADOR_VITORIA;
+        mapa.imprime();
+    }
     return estado;
 }
 

@@ -72,6 +72,10 @@ bool Game::run(){
             case Game::game_gamepad:
             case Game::game_keyplusmouse:{
                 int numFases;
+                char *musicas[5]={"./sfx/song_01.ogg", "./sfx/song_02.ogg", "./sfx/song_03.ogg", "./sfx/song_04.ogg", "./sfx/song_05.ogg"};
+                unsigned int musica = CA_CarregaMusica(musicas[rand()%5]);
+                CA_TocaMusica(musica, -1);
+                bool trocouFase=false;
                 if(!carregaListaFases("./levels/levels_list.dat", &numFases, listaFases))
                 {
                     printf("Erro ao carregar as fases!\n");
@@ -86,11 +90,19 @@ bool Game::run(){
                     bool resultado=false;
                     while(faseAtual<numFases)
                     {
+                        if(trocouFase){
+                            trocouFase=false;
+                            CA_FadeMusica(0);
+                            musica = CA_CarregaMusica(musicas[rand()%5]);
+                            CA_TocaMusica(musica, -1);
+                        }
                         resultado = gamescreen(jogador, faseAtual,listaFases[faseAtual]);
                         if(resultado)
                         {
-                            if(jogador.pegaEstado()==Jogador::JOGADOR_VITORIA)
+                            if(jogador.pegaEstado()==Jogador::JOGADOR_VITORIA){
                                 faseAtual++;
+                                trocouFase=true;
+                            }
                             else
                                 mortes++;
                         }
@@ -105,7 +117,8 @@ bool Game::run(){
                     else
                         currentstate = Game::mainmenu;
                 }
-                currentstate = Game::mainmenu;
+                CA_FadeMusica(0);
+                CA_RemoveMusica(musica);
                 break;
             }
             case Game::tutorial:
@@ -174,8 +187,12 @@ int Game::mainmenuscreen(){
     C2D_TrocaCorLimpezaTela(0,0,0);
     //int musica = CA_CarregaMusica("audio/01-menu.ogg");
     //CA_TocaMusica(musica, 1);
+    unsigned int background = C2D_CarregaSpriteSet("./gfx/title.jpg", 0, 0);
+    unsigned int musica = CA_CarregaMusica("./sfx/menu.ogg");
+    CA_TocaMusica(musica, -1);
     while(!end){
         C2D_LimpaTela();
+        C2D_DesenhaSprite(background, 0, 0, 0);
         C2D_DesenhaTexto(fonteTitulo, 960, 250, "Gravity Flip", C2D_TEXTO_CENTRALIZADO, 32, 128, 255, 255);
         C2D_DesenhaTexto(fonteSistema, 960, 600, "Right button: right gamepad shoulder button, D key or Right Key. ", C2D_TEXTO_CENTRALIZADO, 255, 255, 255, 255);
         C2D_DesenhaTexto(fonteSistema, 960, 640, "Left: left gamepad shoulder button, A key or Left key.", C2D_TEXTO_CENTRALIZADO, 255, 255, 255, 255);
@@ -203,6 +220,9 @@ int Game::mainmenuscreen(){
             choice = Game::game_gamepad;
         }
     }
+    C2D_RemoveSpriteSet(background);
+    CA_FadeMusica(0);
+    CA_RemoveMusica(musica);
     return choice;
 }
 
@@ -240,12 +260,15 @@ bool Game::gamescreen(Jogador &jogador, int numFase, char *arquivoFase)
     int tempoMensagem=180;
     unsigned int tileset = C2D_CarregaSpriteSet("./gfx/tileset.png", 32, 32);
     unsigned int spriteJogador = C2D_CarregaSpriteSet("./gfx/colored.png", 32, 32);
-    char *listaMusicas[4]= {
-        "audio/02-tutorial.ogg",
-        "audio/03-tutorial2.ogg",
-        "audio/05-youknowthosekillright.ogg",
-        "audio/06-thinkfast.ogg"
-    };
+    unsigned int turn = CA_CarregaEfeito("sfx/turn.ogg");
+    unsigned int crash = CA_CarregaEfeito("sfx/crash.ogg");
+    unsigned int win = CA_CarregaEfeito("sfx/win.ogg");
+
+    char *backgrounds[6]={"./gfx/back_01.jpg", "./gfx/back_02.jpg", "./gfx/back_03.jpg", "./gfx/back_04.jpg", "./gfx/back_05.jpg", "./gfx/back_06.jpg"};
+
+
+    unsigned int background = C2D_CarregaSpriteSet(backgrounds[rand()%6], 0, 0);
+
     Fase    fase=Fase();
     int angulo=0;
     bool debug=false;
@@ -258,22 +281,6 @@ bool Game::gamescreen(Jogador &jogador, int numFase, char *arquivoFase)
     jogador.inicializa(fase);
     unsigned int faixa = C2D_CarregaSpriteSet("./gfx/faixa.png", 0, 0);
 
-/*    if(!carregaFase(arquivoFase, mensagem, mapa, arquivoMusica))
-    {
-        printf("Erro ao carregar a fase %s\n", arquivoFase);
-        return false;
-    }
-    printf("Fase %d: Mensagem: %s\nMúsica: %s\n", numFase+1, mensagem, arquivoMusica);
-
-    // Se a música for aleatória
-    if(strcmp(arquivoMusica, "random")==0)
-    {
-        int escolha = rand()%4;
-        strcpy(arquivoMusica, listaMusicas[escolha]);
-    }
-
-    int musica = CA_CarregaMusica(arquivoMusica);
-    int musicaClear = CA_CarregaMusica("audio/04-stage_clear.ogg");*/
 
     // Inicializa a fase com os dados do mapa
     char texto[128];
@@ -301,12 +308,14 @@ bool Game::gamescreen(Jogador &jogador, int numFase, char *arquivoFase)
             if(teclado[C2D_TDIREITA].pressionou || teclado[C2D_TD].pressionou || gamepads[0].botoes[C2D_GBOTAO_R].pressionou){
                 angulo=(angulo+90)%360;
                 jogador.rotaciona(90);
+                CA_TocaEfeito(turn, CA_CENTRO);
             }
             else if(teclado[C2D_TESQUERDA].pressionou || teclado[C2D_TA].pressionou || gamepads[0].botoes[C2D_GBOTAO_L].pressionou){
                 angulo=(angulo-90);
                 if(angulo<0)
                     angulo=270;
                 jogador.rotaciona(-90);
+                CA_TocaEfeito(turn, CA_CENTRO);
             }
             if(teclado[C2D_TF12].pressionou)
                 debug=!debug;
@@ -316,7 +325,7 @@ bool Game::gamescreen(Jogador &jogador, int numFase, char *arquivoFase)
             for(int i=JOGO_TRIGGER_0;i<=JOGO_TRIGGER_4;i++)
                 if(fase.colideMarca(i, x, y, largura, altura))
                     if(fase.ativaTrigger(i-JOGO_TRIGGER_0)){
-                        contaTrigger=120;
+                        contaTrigger=180;
                         trigger=i-JOGO_TRIGGER_0;
                         break;
                     }
@@ -338,10 +347,14 @@ bool Game::gamescreen(Jogador &jogador, int numFase, char *arquivoFase)
         // roda a lógica a 600fps
         estado = jogador.atualiza(fase, angulo);
         // Verifica se ganhou
-        if(contaGameOver==0 && estado==Jogador::JOGADOR_MORTO)
+        if(contaGameOver==0 && estado==Jogador::JOGADOR_MORTO){
             contaGameOver=180;
-        if(contaVitoria==0 && estado==Jogador::JOGADOR_VITORIA)
+            CA_TocaEfeito(crash, CA_CENTRO);
+        }
+        if(contaVitoria==0 && estado==Jogador::JOGADOR_VITORIA){
             contaVitoria=180;
+            CA_TocaEfeito(win, CA_CENTRO);
+        }
 
 
 
@@ -349,6 +362,7 @@ bool Game::gamescreen(Jogador &jogador, int numFase, char *arquivoFase)
         if(roda){
             // Desenha a tela
             C2D_LimpaTela();
+            C2D_DesenhaSprite(background, 0, 0, 0);
             int x_desl=(1920-32*32)/2;
             int y_desl=(1080-32*32)/2;
             fase.desenha(x_desl, y_desl, angulo, debug);
@@ -368,9 +382,11 @@ bool Game::gamescreen(Jogador &jogador, int numFase, char *arquivoFase)
             C2D_Sincroniza(C2D_FPS_PADRAO);
         }
     }
-    CA_FadeMusica(0);
     C2D_RemoveSpriteSet(tileset);
     C2D_RemoveSpriteSet(spriteJogador);
+    CA_RemoveEfeito(turn);
+    CA_RemoveEfeito(crash);
+    CA_RemoveEfeito(win);
     if(sai)
         return false;
     return true;
@@ -397,6 +413,7 @@ float Game::calculaAngulo(const float dx, const float dy)
 
 bool Game::creditsscreen(){
     int spriteCreditos;
+    unsigned int fundosCreditos = C2D_CarregaSpriteSet("gfx/credits.jpg", 0, 0);
     spriteCreditos = C2D_CarregaSpriteSet("gfx/credits.png", 0, 0);
     if(spriteCreditos==0)
         return false;
@@ -405,11 +422,12 @@ bool Game::creditsscreen(){
     int altura=1080+4069;
     int contador=0;
     C2D_TrocaCorLimpezaTela(0,0,0);
-    int musica = CA_CarregaMusica("audio/07-welldone.ogg");
+    int musica = CA_CarregaMusica("./sfx/credits.ogg");
     CA_TocaMusica(musica, 1);
     while(!sai && contador < tempo)
     {
         C2D_LimpaTela();
+        C2D_DesenhaSprite(fundosCreditos, 0, 0, 0);
         int y = (int)(((float)contador/tempo)*altura);
         contador++;
         // Determina se sai
@@ -425,7 +443,9 @@ bool Game::creditsscreen(){
                 sai=true;
     }
     CA_FadeMusica(0);
+    C2D_RemoveSpriteSet(fundosCreditos);
     C2D_RemoveSpriteSet(spriteCreditos);
+    CA_RemoveMusica(musica);
     return true;
 }
 
